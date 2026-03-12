@@ -14,16 +14,6 @@ import {
 import { useToast } from "@/components/ui/toast";
 import type { Workspace } from "@/lib/supabase/types";
 
-const timeOptions = [
-  "17:00",
-  "17:30",
-  "18:00",
-  "18:30",
-  "19:00",
-  "19:30",
-  "20:00",
-];
-
 interface GeneralSettingsProps {
   workspace: Workspace;
   isAdmin: boolean;
@@ -33,9 +23,6 @@ export function GeneralSettings({ workspace, isAdmin }: GeneralSettingsProps) {
   const { toast } = useToast();
 
   const [workspaceName, setWorkspaceName] = useState(workspace.name);
-  const [reportTime, setReportTime] = useState(
-    workspace.report_generation_time,
-  );
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSaveWorkspace = async (e: React.FormEvent) => {
@@ -53,7 +40,6 @@ export function GeneralSettings({ workspace, isAdmin }: GeneralSettingsProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: workspaceName,
-          report_generation_time: reportTime,
         }),
       });
 
@@ -98,30 +84,6 @@ export function GeneralSettings({ workspace, isAdmin }: GeneralSettingsProps) {
             onChange={(e) => setWorkspaceName(e.target.value)}
             disabled={!isAdmin}
           />
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="report-time"
-              className="text-sm font-medium text-gray-700"
-            >
-              日報生成時刻
-            </label>
-            <select
-              id="report-time"
-              value={reportTime}
-              onChange={(e) => setReportTime(e.target.value)}
-              disabled={!isAdmin}
-              className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
-            >
-              {timeOptions.map((time) => (
-                <option key={time} value={time}>
-                  {time}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-500">
-              この時刻にSlackデータを集約してAIが日報を自動生成します。
-            </p>
-          </div>
           {isAdmin && (
             <div className="flex justify-end">
               <Button type="submit" disabled={isSaving}>

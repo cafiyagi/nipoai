@@ -66,7 +66,7 @@ const categories: CategoryItem[] = [
   {
     id: "general",
     label: "一般設定",
-    description: "ワークスペース名、日報生成時刻",
+    description: "ワークスペース名の変更",
     icon: Settings,
     iconBg: "bg-gray-100 text-gray-500",
     iconHoverBg: "group-hover:bg-blue-50 group-hover:text-blue-600",
