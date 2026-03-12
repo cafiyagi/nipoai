@@ -93,7 +93,7 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
     }
 
     // M-1: Rate limit — 10 requests per minute per user
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
     });
     if (!rl.allowed) {
       return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
+        { error: "リクエストが多すぎます。しばらくしてから再度お試しください。" },
         { status: 429 },
       );
     }
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
 
     if (!rawMemberships) {
       return NextResponse.json(
-        { error: "No workspace found" },
+        { error: "ワークスペースが見つかりません" },
         { status: 400 },
       );
     }
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
 
     if (!rawWorkspace) {
       return NextResponse.json(
-        { error: "Workspace not found" },
+        { error: "ワークスペースが見つかりません" },
         { status: 400 },
       );
     }
@@ -153,7 +153,7 @@ export async function POST(request: Request) {
 
     if (!rawIntegration) {
       return NextResponse.json(
-        { error: "Slack integration not found. Please connect Slack first." },
+        { error: "Slack連携が見つかりません。設定画面からSlackを連携してください。", code: "NO_SLACK" },
         { status: 400 },
       );
     }
@@ -166,7 +166,7 @@ export async function POST(request: Request) {
     const channelIds = integration.selected_channel_ids ?? [];
     if (channelIds.length === 0) {
       return NextResponse.json(
-        { error: "No Slack channels selected. Please select channels in settings." },
+        { error: "Slackチャンネルが選択されていません。設定画面でチャンネルを選択してください。", code: "NO_CHANNELS" },
         { status: 400 },
       );
     }
@@ -193,7 +193,7 @@ export async function POST(request: Request) {
       if (existing.status === "submitted" || existing.status === "delivered") {
         return NextResponse.json(
           {
-            error: "Today's report has already been submitted.",
+            error: "本日の日報は既に提出済みです。",
             reportId: existing.id,
           },
           { status: 409 },
@@ -314,7 +314,7 @@ export async function POST(request: Request) {
     if (insertError) {
       console.error("Manual generate: Failed to save report:", insertError);
       return NextResponse.json(
-        { error: "Failed to save report" },
+        { error: "日報の保存に失敗しました" },
         { status: 500 },
       );
     }
@@ -327,7 +327,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Manual generate-report fatal error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "サーバーエラーが発生しました" },
       { status: 500 },
     );
   }

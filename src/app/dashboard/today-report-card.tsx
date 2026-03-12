@@ -50,10 +50,12 @@ export function TodayReportCard({
   });
   const [reportId, setReportId] = useState<string | null>(todayReportId);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
 
   const handleGenerate = async (regenerate = false) => {
     setState("generating");
     setErrorMessage(null);
+    setErrorCode(null);
 
     try {
       const url = regenerate
@@ -72,6 +74,7 @@ export function TodayReportCard({
       if (!res.ok) {
         setState("not_generated");
         setErrorMessage(data.error ?? "日報の生成に失敗しました");
+        setErrorCode(data.code ?? null);
         return;
       }
 
@@ -168,7 +171,14 @@ export function TodayReportCard({
 
           {/* Error message */}
           {errorMessage && (
-            <p className="text-xs text-red-600">{errorMessage}</p>
+            <div className="flex flex-col items-start gap-1">
+              <p className="text-xs text-red-600">{errorMessage}</p>
+              {(errorCode === "NO_SLACK" || errorCode === "NO_CHANNELS") && (
+                <Link href="/dashboard/settings" className="text-xs text-blue-600 hover:underline">
+                  設定画面を開く →
+                </Link>
+              )}
+            </div>
           )}
         </div>
       </div>
