@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getResendClient } from "@/lib/email/client";
+import { buildInviteEmailHtml } from "@/lib/email/invite-template";
 import type {
   UserWorkspaceMembership,
   UserWorkspaceMembershipInsert,
@@ -134,13 +136,15 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     // Check workspace plan limits
-    const { data: rawWorkspace } = await supabase
+    const admin = createAdminClient();
+
+    const { data: rawWorkspace } = await admin
       .from("workspaces")
-      .select("plan")
+      .select("plan, name")
       .eq("id", workspaceId)
       .single();
 
-    const workspace = rawWorkspace as Pick<Workspace, "plan"> | null;
+    const workspace = rawWorkspace as Pick<Workspace, "plan" | "name"> | null;
 
     if (!workspace) {
       return NextResponse.json(
@@ -149,7 +153,7 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    const { count: memberCount } = await supabase
+    const { count: memberCount } = await admin
       .from("user_workspace_memberships")
       .select("id", { count: "exact", head: true })
       .eq("workspace_id", workspaceId);
@@ -164,14 +168,13 @@ export async function POST(request: Request, context: RouteContext) {
     if ((memberCount ?? 0) >= maxMembers) {
       return NextResponse.json(
         {
-          error: `Workspace has reached the maximum number of members (${maxMembers}) for the ${workspace.plan} plan`,
+          error: `メンバー数が上限（${maxMembers}人）に達しています。プランをアップグレードしてください。`,
         },
         { status: 403 },
       );
     }
 
-    // Find the user by email using admin client
-    const admin = createAdminClient();
+    // Find the user by email
     const { data: rawTargetProfile } = await admin
       .from("profiles")
       .select("id")
@@ -180,53 +183,119 @@ export async function POST(request: Request, context: RouteContext) {
 
     const targetProfile = rawTargetProfile as Pick<Profile, "id"> | null;
 
-    if (!targetProfile) {
-      return NextResponse.json(
-        {
-          error:
-            "User not found. They need to sign up first before being invited.",
-        },
-        { status: 404 },
-      );
+    if (targetProfile) {
+      // ---- User exists: add directly ----
+
+      // Check if already a member
+      const { data: rawExisting } = await admin
+        .from("user_workspace_memberships")
+        .select("id")
+        .eq("user_id", targetProfile.id)
+        .eq("workspace_id", workspaceId)
+        .single();
+
+      if (rawExisting) {
+        return NextResponse.json(
+          { error: "このユーザーは既にメンバーです" },
+          { status: 409 },
+        );
+      }
+
+      const memberRow: UserWorkspaceMembershipInsert = {
+        user_id: targetProfile.id,
+        workspace_id: workspaceId,
+        role: role as "admin" | "member",
+      };
+
+      const { data: newMembership, error: insertError } = await admin
+        .from("user_workspace_memberships")
+        .insert(memberRow as never)
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("Failed to add member:", insertError);
+        return NextResponse.json(
+          { error: "メンバーの追加に失敗しました" },
+          { status: 500 },
+        );
+      }
+
+      return NextResponse.json({ membership: newMembership }, { status: 201 });
     }
 
-    // Check if already a member
-    const { data: rawExisting } = await admin
-      .from("user_workspace_memberships")
-      .select("id")
-      .eq("user_id", targetProfile.id)
+    // ---- User does not exist: create invitation ----
+
+    // Check for existing pending invitation
+    const { data: existingInvite } = await admin
+      .from("workspace_invitations")
+      .select("id, status")
       .eq("workspace_id", workspaceId)
+      .eq("email", email.toLowerCase())
       .single();
 
-    if (rawExisting) {
-      return NextResponse.json(
-        { error: "User is already a member of this workspace" },
-        { status: 409 },
-      );
+    if (existingInvite) {
+      if ((existingInvite as { status: string }).status === "pending") {
+        return NextResponse.json(
+          { error: "このメールアドレスには既に招待を送信済みです" },
+          { status: 409 },
+        );
+      }
+      // Expired invitation — delete and re-create
+      await admin
+        .from("workspace_invitations")
+        .delete()
+        .eq("id", (existingInvite as { id: string }).id);
     }
 
-    // Add the member
-    const memberRow: UserWorkspaceMembershipInsert = {
-      user_id: targetProfile.id,
-      workspace_id: workspaceId,
-      role: role as "admin" | "member",
-    };
+    // Create invitation record
+    const { error: inviteError } = await admin
+      .from("workspace_invitations")
+      .insert({
+        workspace_id: workspaceId,
+        email: email.toLowerCase(),
+        role,
+        invited_by: user.id,
+      } as never);
 
-    const { data: newMembership, error: insertError } = await admin
-      .from("user_workspace_memberships")
-      .insert(memberRow as never)
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error("Failed to add member:", insertError);
+    if (inviteError) {
+      console.error("Failed to create invitation:", inviteError);
       return NextResponse.json(
-        { error: "Failed to add member" },
+        { error: "招待の作成に失敗しました" },
         { status: 500 },
       );
     }
 
-    return NextResponse.json({ membership: newMembership }, { status: 201 });
+    // Send invite email
+    const inviterProfile = await admin
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .single();
+
+    const inviterName =
+      (inviterProfile.data as { display_name: string } | null)?.display_name ??
+      "チームメンバー";
+
+    const resend = getResendClient();
+    if (resend) {
+      try {
+        await resend.emails.send({
+          from: "NipoAI <noreply@nipoai.com>",
+          to: email.toLowerCase(),
+          subject: `${inviterName}さんから「${workspace.name}」への招待`,
+          html: buildInviteEmailHtml(workspace.name, inviterName),
+        });
+      } catch (emailErr) {
+        console.error("Failed to send invite email:", emailErr);
+        // Don't fail the request — invitation is saved
+      }
+    }
+
+    return NextResponse.json(
+      { message: "招待メールを送信しました", invited: true },
+      { status: 201 },
+    );
   } catch (error) {
     console.error("POST /api/workspaces/[id]/members error:", error);
     return NextResponse.json(

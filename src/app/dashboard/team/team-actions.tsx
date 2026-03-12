@@ -42,7 +42,12 @@ export function TeamActions({ workspaceId, isAdmin }: TeamActionsProps) {
         return;
       }
 
-      toast(`${inviteEmail} を招待しました`, "success");
+      toast(
+        data.invited
+          ? `${inviteEmail} に招待メールを送信しました`
+          : `${inviteEmail} をメンバーに追加しました`,
+        "success",
+      );
       setInviteEmail("");
       setInviteOpen(false);
     } catch {
