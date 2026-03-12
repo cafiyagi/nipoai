@@ -45,7 +45,7 @@ export async function GET(_request: Request, context: RouteContext) {
     const { data: rawMembers, error } = await supabase
       .from("user_workspace_memberships")
       .select(
-        "id, role, created_at, profiles(id, email, display_name, avatar_url)",
+        "id, role, created_at, profiles!user_workspace_memberships_user_id_profiles_fkey(id, email, display_name, avatar_url)",
       )
       .eq("workspace_id", workspaceId)
       .order("created_at", { ascending: true });
