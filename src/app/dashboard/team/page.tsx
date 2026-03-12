@@ -3,10 +3,10 @@ import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { createClient } from "@/lib/supabase/server";
 import { TeamActions } from "./team-actions";
+import { MemberRoleSelect } from "./member-role-select";
 
 import type {
   UserWorkspaceMembership,
@@ -172,15 +172,13 @@ export default async function TeamPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <Badge
-                              variant={
-                                member.role === "admin"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                            >
-                              {member.role === "admin" ? "管理者" : "メンバー"}
-                            </Badge>
+                            <MemberRoleSelect
+                              workspaceId={workspaceId}
+                              membershipId={member.id}
+                              currentRole={member.role}
+                              isSelf={member.userId === user.id}
+                              isAdmin={isAdmin}
+                            />
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">
                             {member.lastReport ?? "未提出"}
@@ -204,15 +202,13 @@ export default async function TeamPage() {
                           <p className="truncate text-sm font-medium text-gray-900">
                             {member.name}
                           </p>
-                          <Badge
-                            variant={
-                              member.role === "admin"
-                                ? "default"
-                                : "secondary"
-                            }
-                          >
-                            {member.role === "admin" ? "管理者" : "メンバー"}
-                          </Badge>
+                          <MemberRoleSelect
+                            workspaceId={workspaceId}
+                            membershipId={member.id}
+                            currentRole={member.role}
+                            isSelf={member.userId === user.id}
+                            isAdmin={isAdmin}
+                          />
                         </div>
                         <p className="mt-0.5 text-xs text-gray-500">
                           最終日報: {member.lastReport ?? "未提出"}
