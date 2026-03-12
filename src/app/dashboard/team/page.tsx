@@ -206,6 +206,7 @@ export default async function TeamPage() {
                           <MemberRoleSelect
                             workspaceId={workspaceId}
                             membershipId={member.id}
+                            memberName={member.name}
                             currentRole={member.role}
                             isSelf={member.userId === user.id}
                             isAdmin={isAdmin}
