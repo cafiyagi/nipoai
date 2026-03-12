@@ -87,6 +87,31 @@ export async function signUpWithEmail(
 }
 
 // ---------------------------------------------------------------------------
+// OAuth Sign In (Google, etc.)
+// ---------------------------------------------------------------------------
+
+export async function signInWithGoogle(): Promise<AuthResult> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/callback`,
+    },
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  if (data.url) {
+    redirect(data.url);
+  }
+
+  return { error: "OAuth URLの取得に失敗しました。" };
+}
+
+// ---------------------------------------------------------------------------
 // Sign Out
 // ---------------------------------------------------------------------------
 
