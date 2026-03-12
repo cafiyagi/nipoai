@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getResendClient } from "@/lib/email/client";
-import { buildInviteEmailHtml } from "@/lib/email/invite-template";
 import type {
   UserWorkspaceMembership,
   UserWorkspaceMembershipInsert,
@@ -266,30 +264,17 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    // Send invite email
-    const inviterProfile = await admin
-      .from("profiles")
-      .select("display_name")
-      .eq("id", user.id)
-      .single();
+    // Send invite email via Supabase Auth (uses Supabase's email infra)
+    const { error: inviteAuthError } = await admin.auth.admin.inviteUserByEmail(
+      email.toLowerCase(),
+      {
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/callback`,
+      },
+    );
 
-    const inviterName =
-      (inviterProfile.data as { display_name: string } | null)?.display_name ??
-      "チームメンバー";
-
-    const resend = getResendClient();
-    if (resend) {
-      try {
-        await resend.emails.send({
-          from: "NipoAI <onboarding@resend.dev>",
-          to: email.toLowerCase(),
-          subject: `${inviterName}さんから「${workspace.name}」への招待`,
-          html: buildInviteEmailHtml(workspace.name, inviterName),
-        });
-      } catch (emailErr) {
-        console.error("Failed to send invite email:", emailErr);
-        // Don't fail the request — invitation is saved
-      }
+    if (inviteAuthError) {
+      console.error("Failed to send invite email:", inviteAuthError);
+      // Don't fail — invitation record is saved, user can still sign up manually
     }
 
     return NextResponse.json(
