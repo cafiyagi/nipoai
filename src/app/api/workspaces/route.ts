@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getResendClient } from "@/lib/email/client";
+import { buildWelcomeEmail } from "@/lib/email/templates";
 import type {
   Workspace,
   WorkspaceInsert,
@@ -151,6 +153,30 @@ export async function POST(request: Request) {
         { error: "Failed to set up workspace" },
         { status: 500 },
       );
+    }
+
+    // Send welcome email (fire-and-forget — never block workspace creation)
+    const resend = getResendClient();
+    if (resend && user.email) {
+      const { subject, html } = buildWelcomeEmail({
+        workspaceName: ws.name,
+      });
+
+      resend.emails
+        .send({
+          from: "NipoAI <noreply@nipoai.com>",
+          to: user.email,
+          subject,
+          html,
+        })
+        .then((result) => {
+          if (result.error) {
+            console.error("[email] Failed to send welcome email:", result.error);
+          }
+        })
+        .catch((err) => {
+          console.error("[email] Welcome email send error:", err);
+        });
     }
 
     return NextResponse.json({ workspace: ws }, { status: 201 });

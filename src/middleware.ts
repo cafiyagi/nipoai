@@ -5,10 +5,9 @@ import { createServerClient } from "@supabase/ssr";
  * Paths that bypass Supabase session refresh entirely.
  * These endpoints use their own authentication mechanisms:
  *   - /api/webhooks/*  — Stripe signature verification
- *   - /api/cron/*      — CRON_SECRET header
  *   - /api/slack/*     — Slack request signature
  */
-const SKIP_AUTH_PREFIXES = ["/api/webhooks", "/api/cron", "/api/slack"];
+const SKIP_AUTH_PREFIXES = ["/api/webhooks", "/api/slack"];
 
 /**
  * Paths that require an authenticated session.
@@ -26,7 +25,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // -------------------------------------------------------------------------
-  // 1. Skip session refresh for webhook / cron / slack routes
+  // 1. Skip session refresh for webhook / slack routes
   // -------------------------------------------------------------------------
   if (SKIP_AUTH_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
     return NextResponse.next();

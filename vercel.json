@@ -1,12 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/generate-reports",
-      "schedule": "30 8 * * *"
-    },
-    {
-      "path": "/api/cron/deliver-reports",
-      "schedule": "0 9 * * *"
-    }
-  ]
-}
+{}

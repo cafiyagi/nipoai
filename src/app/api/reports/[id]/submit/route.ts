@@ -1,13 +1,154 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createSlackClient } from "@/lib/slack/client";
+import { DEFAULT_TEMPLATE, type ReportTemplate } from "@/lib/report-template";
 import type {
   DailyReport,
   DailyReportUpdate,
+  ReportContent,
   UserWorkspaceMembership,
+  SlackIntegration,
+  Workspace,
+  Profile,
+  ReportDeliveryInsert,
 } from "@/lib/supabase/types";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
+}
+
+const SECTION_ICONS: Record<string, string> = {
+  achievements: ":white_check_mark:",
+  challenges: ":warning:",
+  tomorrow_plan: ":calendar:",
+  remarks: ":memo:",
+};
+
+function formatReportForSlack(
+  content: ReportContent,
+  userName: string,
+  reportDate: string,
+  template: ReportTemplate,
+): string {
+  const lines: string[] = [];
+  lines.push(`*${userName}さんの日報 (${reportDate})*\n`);
+
+  for (const section of template) {
+    const items = content[section.key] ?? [];
+    if (items.length === 0) continue;
+
+    const icon = SECTION_ICONS[section.key] ?? ":small_blue_diamond:";
+    lines.push(`*${icon} ${section.label}*`);
+    for (const item of items) {
+      lines.push(`  - ${item}`);
+    }
+    lines.push("");
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * Deliver submitted report to Slack (fire-and-forget, non-blocking).
+ * Failures are logged but do not affect the submit response.
+ */
+async function deliverToSlack(reportId: string, workspaceId: string) {
+  try {
+    const admin = createAdminClient();
+
+    const { data: rawWorkspace } = await admin
+      .from("workspaces")
+      .select(
+        "id, name, timezone, report_template, slack_integrations(id, encrypted_bot_token)",
+      )
+      .eq("id", workspaceId)
+      .single();
+
+    if (!rawWorkspace) return;
+
+    const workspace = rawWorkspace as unknown as Pick<
+      Workspace,
+      "id" | "name" | "timezone" | "report_template"
+    > & {
+      slack_integrations: Pick<SlackIntegration, "id" | "encrypted_bot_token">[];
+    };
+
+    if (!workspace.slack_integrations?.length) return;
+
+    const { data: rawReport } = await admin
+      .from("daily_reports")
+      .select("id, content, report_date, user_id, profiles(display_name, email)")
+      .eq("id", reportId)
+      .single();
+
+    if (!rawReport) return;
+
+    const report = rawReport as unknown as Pick<
+      DailyReport,
+      "id" | "content" | "report_date" | "user_id"
+    > & {
+      profiles: Pick<Profile, "display_name" | "email">;
+    };
+
+    const integration = workspace.slack_integrations[0];
+    const slackClient = createSlackClient(integration.encrypted_bot_token);
+    const userName =
+      report.profiles?.display_name ?? report.profiles?.email ?? "メンバー";
+    const template = workspace.report_template ?? DEFAULT_TEMPLATE;
+
+    const formattedMessage = formatReportForSlack(
+      report.content,
+      userName,
+      report.report_date,
+      template,
+    );
+
+    // Look up Slack user by email
+    let slackUserId: string | undefined;
+    try {
+      const lookupResult = await slackClient.users.lookupByEmail({
+        email: report.profiles?.email ?? "",
+      });
+      slackUserId = lookupResult.user?.id;
+    } catch {
+      return; // User not found in Slack
+    }
+
+    if (!slackUserId) return;
+
+    // Open DM and send
+    const dmResult = await slackClient.conversations.open({
+      users: slackUserId,
+    });
+    const dmChannelId = dmResult.channel?.id;
+    if (!dmChannelId) return;
+
+    await slackClient.chat.postMessage({
+      channel: dmChannelId,
+      text: formattedMessage,
+      mrkdwn: true,
+    });
+
+    // Record delivery
+    const deliveryPayload: ReportDeliveryInsert = {
+      report_id: reportId,
+      channel: "slack_dm",
+      recipient: slackUserId,
+      status: "sent",
+      sent_at: new Date().toISOString(),
+    };
+    await admin.from("report_deliveries").insert(deliveryPayload as never);
+
+    // Update report status to delivered
+    const deliveredUpdate: DailyReportUpdate = { status: "delivered" };
+    await admin
+      .from("daily_reports")
+      .update(deliveredUpdate as never)
+      .eq("id", reportId);
+  } catch (error) {
+    console.error("Slack delivery failed (non-blocking):", error);
+  }
 }
 
 export async function POST(_request: Request, context: RouteContext) {
@@ -91,6 +232,9 @@ export async function POST(_request: Request, context: RouteContext) {
         { status: 500 },
       );
     }
+
+    // Deliver to Slack in the background (non-blocking)
+    deliverToSlack(report.id, report.workspace_id).catch(() => {});
 
     return NextResponse.json({ report: updated });
   } catch (error) {
