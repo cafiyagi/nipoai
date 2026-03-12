@@ -117,7 +117,11 @@ export async function POST(request: Request) {
 
     if (workspace.stripe_customer_id) {
       sessionParams.customer = workspace.stripe_customer_id;
+      sessionParams.customer_update = {
+        name: "auto",
+      };
     } else {
+      sessionParams.customer_creation = "always";
       sessionParams.customer_email = user.email ?? undefined;
     }
 
