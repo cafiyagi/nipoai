@@ -280,7 +280,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Not enough Slack messages found today to generate a report. Please try again later.",
+            "本日のSlackメッセージが少なすぎるため、日報を生成できません。もう少し活動してから再度お試しください。",
         },
         { status: 400 },
       );
