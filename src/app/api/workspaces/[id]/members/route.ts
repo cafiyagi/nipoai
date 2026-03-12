@@ -281,7 +281,7 @@ export async function POST(request: Request, context: RouteContext) {
     if (resend) {
       try {
         await resend.emails.send({
-          from: "NipoAI <noreply@nipoai.com>",
+          from: "NipoAI <onboarding@resend.dev>",
           to: email.toLowerCase(),
           subject: `${inviterName}さんから「${workspace.name}」への招待`,
           html: buildInviteEmailHtml(workspace.name, inviterName),

@@ -164,7 +164,7 @@ export async function POST(request: Request) {
 
       resend.emails
         .send({
-          from: "NipoAI <noreply@nipoai.com>",
+          from: "NipoAI <onboarding@resend.dev>",
           to: user.email,
           subject,
           html,
