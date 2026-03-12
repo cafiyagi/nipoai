@@ -2,9 +2,8 @@ import Link from "next/link";
 import { FileText, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
 import { format, startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns";
 import { ja } from "date-fns/locale";
-import { redirect } from "next/navigation";
 
-import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceContext } from "@/lib/dashboard/get-workspace-context";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,20 +46,11 @@ interface ReportsPageProps {
 }
 
 export default async function ReportsPage({ searchParams }: ReportsPageProps) {
-  const supabase = await createClient();
-
-  // ---------- Auth ----------
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
+  const { user, supabase } = await getWorkspaceContext();
 
   // ---------- Month filter via searchParams ----------
   const params = await searchParams;
-  const monthParam = params.month; // e.g. "2026-03"
+  const monthParam = params.month;
 
   let currentMonth: Date;
   if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {

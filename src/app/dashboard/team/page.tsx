@@ -1,10 +1,9 @@
-import { redirect } from "next/navigation";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
-import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceContext } from "@/lib/dashboard/get-workspace-context";
 import { TeamActions } from "./team-actions";
 import { MemberRoleSelect } from "./member-role-select";
 
@@ -28,70 +27,37 @@ interface MemberDisplay {
 }
 
 export default async function TeamPage() {
-  const supabase = await createClient();
+  const { user, supabase, workspaceId, isAdmin } =
+    await getWorkspaceContext();
 
-  // Get current user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  // Get the user's first workspace membership
-  const { data: rawMyMembership } = await supabase
-    .from("user_workspace_memberships")
-    .select("workspace_id, role")
-    .eq("user_id", user.id)
-    .limit(1)
-    .single();
-
-  if (!rawMyMembership) {
-    redirect("/onboarding");
-  }
-
-  const myMembership = rawMyMembership as Pick<
-    UserWorkspaceMembership,
-    "workspace_id" | "role"
-  >;
-  const workspaceId = myMembership.workspace_id;
-  const isAdmin = myMembership.role === "admin";
-
-  // Fetch all members with profiles
-  const { data: rawMembers } = await supabase
-    .from("user_workspace_memberships")
-    .select(
-      "id, user_id, role, created_at, profiles!user_workspace_memberships_user_id_profiles_fkey(id, email, display_name, avatar_url)",
-    )
-    .eq("workspace_id", workspaceId)
-    .order("created_at", { ascending: true });
-
-  const membersRaw = (rawMembers ?? []) as unknown as MemberWithProfile[];
-
-  // Get latest report date for each member
-  const memberUserIds = membersRaw.map((m) => m.user_id);
-
-  let latestReportMap: Record<string, string> = {};
-
-  if (memberUserIds.length > 0) {
-    const { data: rawReports } = await supabase
+  // Fetch members and reports in parallel
+  const [membersResult, reportsResult] = await Promise.all([
+    supabase
+      .from("user_workspace_memberships")
+      .select(
+        "id, user_id, role, created_at, profiles!user_workspace_memberships_user_id_profiles_fkey(id, email, display_name, avatar_url)",
+      )
+      .eq("workspace_id", workspaceId)
+      .order("created_at", { ascending: true }),
+    supabase
       .from("daily_reports")
       .select("user_id, report_date")
       .eq("workspace_id", workspaceId)
-      .in("user_id", memberUserIds)
-      .order("report_date", { ascending: false });
+      .order("report_date", { ascending: false }),
+  ]);
 
-    const reports = (rawReports ?? []) as Pick<
-      DailyReport,
-      "user_id" | "report_date"
-    >[];
+  const membersRaw = (membersResult.data ?? []) as unknown as MemberWithProfile[];
 
-    // Keep only the latest report_date per user
-    for (const report of reports) {
-      if (!latestReportMap[report.user_id]) {
-        latestReportMap[report.user_id] = report.report_date;
-      }
+  // Build latest report map
+  const latestReportMap: Record<string, string> = {};
+  const reports = (reportsResult.data ?? []) as Pick<
+    DailyReport,
+    "user_id" | "report_date"
+  >[];
+
+  for (const report of reports) {
+    if (!latestReportMap[report.user_id]) {
+      latestReportMap[report.user_id] = report.report_date;
     }
   }
 

@@ -10,9 +10,8 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import { redirect } from "next/navigation";
 
-import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceContext } from "@/lib/dashboard/get-workspace-context";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -21,11 +20,8 @@ import { TodayReportCard } from "./today-report-card";
 import type {
   ReportStatus,
   ReportContent,
-  Profile,
-  UserWorkspaceMembership,
   DailyReport,
   SlackIntegration,
-  Workspace,
 } from "@/lib/supabase/types";
 
 // ---------------------------------------------------------------------------
@@ -74,85 +70,66 @@ function getGreeting(): string {
 // ---------------------------------------------------------------------------
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
+  const { user, supabase, workspace, workspaceId } =
+    await getWorkspaceContext();
 
-  // ---------- Auth ----------
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  // ---------- Profile ----------
-  const { data: rawProfile } = await supabase
-    .from("profiles")
-    .select("display_name")
-    .eq("id", user.id)
-    .single();
-
-  const profile = rawProfile as unknown as Pick<Profile, "display_name"> | null;
-  const displayName = profile?.display_name || user.email?.split("@")[0] || "ユーザー";
-
-  // ---------- Today's date ----------
   const today = new Date();
   const todayStr = format(today, "yyyy-MM-dd");
+  const displayName =
+    user.user_metadata?.display_name ||
+    user.email?.split("@")[0] ||
+    "ユーザー";
 
-  // ---------- Workspace info ----------
-  const { data: rawMemberships } = await supabase
-    .from("user_workspace_memberships")
-    .select("workspace_id, role")
-    .eq("user_id", user.id);
-
-  const memberships = (rawMemberships ?? []) as unknown as Pick<
-    UserWorkspaceMembership,
-    "workspace_id" | "role"
-  >[];
-  const workspaceIds = memberships.map((m) => m.workspace_id);
-  const firstWorkspaceId = workspaceIds[0] ?? null;
-
-  // ---------- Workspace details (for report_generation_time) ----------
-  let reportGenerationTime: string | null = null;
-
-  if (firstWorkspaceId) {
-    const { data: rawWorkspace } = await supabase
-      .from("workspaces")
-      .select("report_generation_time")
-      .eq("id", firstWorkspaceId)
-      .single();
-
-    if (rawWorkspace) {
-      const ws = rawWorkspace as unknown as Pick<Workspace, "report_generation_time">;
-      reportGenerationTime = ws.report_generation_time ?? null;
-    }
-  }
-
-  // ---------- Today's report ----------
-  let todayReport: {
-    id: string;
-    status: ReportStatus;
-  } | null = null;
-
-  if (firstWorkspaceId) {
-    const { data: rawTodayReport } = await supabase
+  // All queries in parallel
+  const [
+    profileResult,
+    todayReportResult,
+    recentReportsResult,
+    slackResult,
+    memberCountResult,
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .single(),
+    supabase
       .from("daily_reports")
       .select("id, status")
       .eq("user_id", user.id)
       .eq("report_date", todayStr)
       .order("created_at", { ascending: false })
       .limit(1)
-      .maybeSingle();
+      .maybeSingle(),
+    supabase
+      .from("daily_reports")
+      .select("id, report_date, status, content")
+      .eq("user_id", user.id)
+      .order("report_date", { ascending: false })
+      .limit(5),
+    supabase
+      .from("slack_integrations")
+      .select("selected_channel_ids")
+      .eq("workspace_id", workspaceId)
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("user_workspace_memberships")
+      .select("id", { count: "exact", head: true })
+      .eq("workspace_id", workspaceId),
+  ]);
 
-    if (rawTodayReport) {
-      todayReport = rawTodayReport as unknown as {
-        id: string;
-        status: ReportStatus;
-      };
-    }
-  }
+  // Profile
+  const profileName =
+    (profileResult.data as { display_name: string | null } | null)
+      ?.display_name || displayName;
 
-  // ---------- Determine TodayReportCard initial status ----------
+  // Today's report
+  const todayReport = todayReportResult.data as {
+    id: string;
+    status: ReportStatus;
+  } | null;
+
   const initialStatus: "not_generated" | "draft" | "submitted" | "delivered" =
     todayReport?.status === "submitted"
       ? "submitted"
@@ -162,15 +139,8 @@ export default async function DashboardPage() {
           ? "draft"
           : "not_generated";
 
-  // ---------- Recent 5 reports ----------
-  const { data: rawRecentReports } = await supabase
-    .from("daily_reports")
-    .select("id, report_date, status, content")
-    .eq("user_id", user.id)
-    .order("report_date", { ascending: false })
-    .limit(5);
-
-  const recentReportsRaw = (rawRecentReports ?? []) as unknown as Pick<
+  // Recent reports
+  const recentReportsRaw = (recentReportsResult.data ?? []) as unknown as Pick<
     DailyReport,
     "id" | "report_date" | "status" | "content"
   >[];
@@ -184,40 +154,19 @@ export default async function DashboardPage() {
     summary: buildSummary(r.content ?? null),
   }));
 
-  // ---------- Slack integration ----------
-  let slackConnected = false;
-  let slackChannelCount = 0;
+  // Slack
+  const slackData = slackResult.data as Pick<
+    SlackIntegration,
+    "selected_channel_ids"
+  > | null;
+  const slackConnected = !!slackData;
+  const slackChannelCount = slackData?.selected_channel_ids?.length ?? 0;
 
-  if (firstWorkspaceId) {
-    const { data: rawSlackData } = await supabase
-      .from("slack_integrations")
-      .select("selected_channel_ids")
-      .eq("workspace_id", firstWorkspaceId)
-      .limit(1)
-      .maybeSingle();
+  // Member count
+  const memberCount = memberCountResult.count ?? 0;
 
-    const slackData = rawSlackData as unknown as Pick<
-      SlackIntegration,
-      "selected_channel_ids"
-    > | null;
-
-    if (slackData) {
-      slackConnected = true;
-      slackChannelCount = slackData.selected_channel_ids?.length ?? 0;
-    }
-  }
-
-  // ---------- Member count ----------
-  let memberCount = 0;
-
-  if (firstWorkspaceId) {
-    const { count } = await supabase
-      .from("user_workspace_memberships")
-      .select("id", { count: "exact", head: true })
-      .eq("workspace_id", firstWorkspaceId);
-
-    memberCount = count ?? 0;
-  }
+  // Report generation time
+  const reportGenerationTime = workspace.report_generation_time ?? null;
 
   return (
     <div>
@@ -227,7 +176,7 @@ export default async function DashboardPage() {
         {/* Greeting */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900">
-            {getGreeting()}、{displayName}さん
+            {getGreeting()}、{profileName}さん
           </h2>
           <p className="mt-1 text-gray-500">
             {format(today, "yyyy年M月d日（E）", { locale: ja })}
