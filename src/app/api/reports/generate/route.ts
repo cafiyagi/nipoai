@@ -6,6 +6,7 @@ import { fetchChannelMessages } from "@/lib/slack/messages";
 import { preprocessMessages } from "@/lib/slack/preprocessing";
 import { generateDailyReport } from "@/lib/ai/generate-report";
 import { DEFAULT_TEMPLATE } from "@/lib/report-template";
+import { rateLimit } from "@/lib/rate-limit";
 import type {
   Workspace,
   SlackIntegration,
@@ -93,6 +94,18 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // M-1: Rate limit — 10 requests per minute per user
+    const rl = rateLimit(`generate:${user.id}`, {
+      limit: 10,
+      windowMs: 60_000,
+    });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 },
+      );
     }
 
     // Get user's workspace

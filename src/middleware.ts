@@ -7,7 +7,8 @@ import { createServerClient } from "@supabase/ssr";
  *   - /api/webhooks/*  — Stripe signature verification
  *   - /api/slack/*     — Slack request signature
  */
-const SKIP_AUTH_PREFIXES = ["/api/webhooks", "/api/slack"];
+// M-6: Only skip auth for webhook/callback paths that use their own verification
+const SKIP_AUTH_PREFIXES = ["/api/webhooks", "/api/slack/callback", "/api/slack/oauth"];
 
 /**
  * Paths that require an authenticated session.

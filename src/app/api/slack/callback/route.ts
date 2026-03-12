@@ -59,6 +59,23 @@ export async function GET(request: Request) {
       );
     }
 
+    // H-3: Verify the user is an admin of the target workspace
+    const { data: membership } = await supabase
+      .from("user_workspace_memberships")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("workspace_id", stateWorkspaceId)
+      .single();
+
+    if (!membership || (membership as { role: string }).role !== "admin") {
+      const redirectUrl = new URL(
+        "/dashboard/settings",
+        process.env.NEXT_PUBLIC_APP_URL,
+      );
+      redirectUrl.searchParams.set("slack_error", "forbidden");
+      return NextResponse.redirect(redirectUrl.toString());
+    }
+
     // Exchange code for token
     const slackClient = new WebClient();
     const oauthResult = await slackClient.oauth.v2.access({

@@ -27,7 +27,9 @@ export async function signInWithEmail(
   });
 
   if (error) {
-    return { error: error.message };
+    // L-1: Return generic message to prevent account enumeration
+    console.error("Sign-in error:", error.message);
+    return { error: "メールアドレスまたはパスワードが正しくありません。" };
   }
 
   redirect("/dashboard");
@@ -55,7 +57,9 @@ export async function signUpWithEmail(
   });
 
   if (error) {
-    return { error: error.message };
+    // L-1: Return generic message to prevent information leakage
+    console.error("Sign-up error:", error.message);
+    return { error: "アカウントの作成に失敗しました。入力内容を確認してください。" };
   }
 
   // If email confirmation is required, the user object exists but

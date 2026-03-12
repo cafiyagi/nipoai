@@ -1,9 +1,21 @@
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://nipoai.vercel.app";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://nipoai.app";
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
 export function buildInviteEmailHtml(
   workspaceName: string,
   inviterName: string,
 ): string {
+  // M-5: Escape user-controlled values to prevent XSS in email clients
+  const safeInviter = escapeHtml(inviterName);
+  const safeWorkspace = escapeHtml(workspaceName);
+
   return `
 <!DOCTYPE html>
 <html lang="ja">
@@ -15,7 +27,7 @@ export function buildInviteEmailHtml(
         <tr><td>
           <h1 style="font-size:20px;color:#111827;margin:0 0 8px;">NipoAIへの招待</h1>
           <p style="font-size:14px;color:#6b7280;margin:0 0 24px;">
-            ${inviterName}さんがあなたを「${workspaceName}」に招待しました。
+            ${safeInviter}さんがあなたを「${safeWorkspace}」に招待しました。
           </p>
           <p style="font-size:14px;color:#374151;margin:0 0 24px;">
             下のボタンからアカウントを作成（またはログイン）すると、自動的にワークスペースに参加できます。

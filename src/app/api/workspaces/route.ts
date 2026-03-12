@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomBytes } from "crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getResendClient } from "@/lib/email/client";
@@ -19,7 +20,7 @@ function generateSlug(name: string): string {
     .replace(/^-|-$/g, "")
     .slice(0, 40);
 
-  const suffix = Math.random().toString(36).slice(2, 8);
+  const suffix = randomBytes(4).toString("hex");
   return base ? `${base}-${suffix}` : suffix;
 }
 

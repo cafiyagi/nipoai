@@ -102,7 +102,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Failed to fetch Slack channels:", error instanceof Error ? error.message : error, error instanceof Error ? error.stack : "");
     return NextResponse.json(
-      { error: "Failed to fetch Slack channels", detail: error instanceof Error ? error.message : String(error) },
+      { error: "Failed to fetch Slack channels" },
       { status: 500 },
     );
   }

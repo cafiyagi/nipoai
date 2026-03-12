@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { rateLimit } from "@/lib/rate-limit";
 import type {
   UserWorkspaceMembership,
   UserWorkspaceMembershipInsert,
@@ -110,6 +111,18 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json(
         { error: "Only workspace admins can invite members" },
         { status: 403 },
+      );
+    }
+
+    // M-1: Rate limit — 20 invitations per hour per user
+    const rl = rateLimit(`invite:${user.id}`, {
+      limit: 20,
+      windowMs: 3_600_000,
+    });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many invitations. Please try again later." },
+        { status: 429 },
       );
     }
 

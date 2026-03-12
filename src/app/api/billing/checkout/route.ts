@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe/client";
 import { STRIPE_PLANS } from "@/lib/stripe/plans";
+import { rateLimit } from "@/lib/rate-limit";
 import type Stripe from "stripe";
 import type { Plan, UserWorkspaceMembership, Workspace } from "@/lib/supabase/types";
 
@@ -15,6 +16,18 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // M-1: Rate limit — 5 requests per minute per user
+    const rl = rateLimit(`billing:${user.id}`, {
+      limit: 5,
+      windowMs: 60_000,
+    });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 },
+      );
     }
 
     const body = await request.json();
@@ -125,10 +138,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error("POST /api/billing/checkout error:", message);
+    console.error("POST /api/billing/checkout error:", error instanceof Error ? error.message : error);
     return NextResponse.json(
-      { error: `Failed to create checkout session: ${message}` },
+      { error: "Failed to create checkout session" },
       { status: 500 },
     );
   }

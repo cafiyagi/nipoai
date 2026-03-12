@@ -95,7 +95,7 @@ export default function LandingPage() {
                 <div className="h-2.5 w-2.5 rounded-full bg-gray-300" />
                 <div className="h-2.5 w-2.5 rounded-full bg-gray-300" />
                 <div className="ml-3 flex-1 rounded-md bg-gray-200/60 px-3 py-1 text-center text-xs text-gray-400">
-                  nipoai.vercel.app/dashboard
+                  nipoai.app/dashboard
                 </div>
               </div>
 
