@@ -597,16 +597,16 @@ export default function LandingPage() {
               <span className="font-semibold text-gray-900">NipoAI</span>
             </Link>
             <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-gray-500">
-              <Link href="#" className="transition-colors hover:text-gray-900">
+              <Link href="/terms" className="transition-colors hover:text-gray-900">
                 利用規約
               </Link>
-              <Link href="#" className="transition-colors hover:text-gray-900">
+              <Link href="/privacy" className="transition-colors hover:text-gray-900">
                 プライバシーポリシー
               </Link>
-              <Link href="#" className="transition-colors hover:text-gray-900">
+              <Link href="/legal" className="transition-colors hover:text-gray-900">
                 特定商取引法に基づく表記
               </Link>
-              <Link href="#" className="transition-colors hover:text-gray-900">
+              <Link href="/contact" className="transition-colors hover:text-gray-900">
                 お問い合わせ
               </Link>
             </div>
