@@ -152,6 +152,16 @@ function SidebarContent({
           </button>
         </div>
       </div>
+
+      {/* Legal links */}
+      <div className="border-t border-gray-100 px-4 py-3">
+        <div className="flex flex-wrap gap-x-3 gap-y-1">
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors">利用規約</a>
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors">プライバシー</a>
+          <a href="/legal" target="_blank" rel="noopener noreferrer" className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors">特商法表記</a>
+          <a href="/contact" target="_blank" rel="noopener noreferrer" className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors">お問い合わせ</a>
+        </div>
+      </div>
     </div>
   );
 }
