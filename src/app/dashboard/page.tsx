@@ -1,12 +1,8 @@
 import Link from "next/link";
 import {
-  FileText,
   MessageSquare,
   Users,
   ArrowRight,
-  CheckCircle,
-  Edit3,
-  Clock,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -15,32 +11,14 @@ import { getWorkspaceContext } from "@/lib/dashboard/get-workspace-context";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { TodayReportCard } from "./today-report-card";
-import { ReportDeleteButton } from "./report-delete-button";
+import { RecentReportsList } from "./recent-reports-list";
 import type {
   ReportStatus,
   ReportContent,
   DailyReport,
   SlackIntegration,
 } from "@/lib/supabase/types";
-
-// ---------------------------------------------------------------------------
-// Status display configuration
-// ---------------------------------------------------------------------------
-
-type DisplayStatus = ReportStatus | "not_generated";
-
-const statusConfig: Record<
-  DisplayStatus,
-  { label: string; variant: "success" | "default" | "secondary"; icon: typeof CheckCircle }
-> = {
-  submitted: { label: "提出済み", variant: "success", icon: CheckCircle },
-  delivered: { label: "配信済み", variant: "success", icon: CheckCircle },
-  draft: { label: "下書き", variant: "default", icon: Edit3 },
-  generating: { label: "生成中", variant: "secondary", icon: Clock },
-  not_generated: { label: "未生成", variant: "secondary", icon: Clock },
-};
 
 // ---------------------------------------------------------------------------
 // Helper: build summary from JSONB content
@@ -151,7 +129,7 @@ export default async function DashboardPage() {
     date: format(new Date(r.report_date + "T00:00:00"), "yyyy年M月d日（E）", {
       locale: ja,
     }),
-    status: r.status as DisplayStatus,
+    status: r.status as string,
     summary: buildSummary(r.content ?? null),
   }));
 
@@ -259,56 +237,7 @@ export default async function DashboardPage() {
             </Link>
           </CardHeader>
           <CardContent>
-            {recentReports.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                  <FileText className="h-6 w-6 text-gray-400" />
-                </div>
-                <p className="mt-4 text-sm font-medium text-gray-900">
-                  まだ日報がありません
-                </p>
-                <p className="mt-1 text-sm text-gray-500">
-                  Slackを連携すると、メッセージから自動で日報が生成されます。
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col divide-y divide-gray-100">
-                {recentReports.map((report) => {
-                  const config = statusConfig[report.status];
-                  return (
-                    <div
-                      key={report.id}
-                      className="-mx-2 flex items-center gap-4 rounded-lg px-2 py-3 transition-colors hover:bg-gray-50"
-                    >
-                      <Link
-                        href={`/dashboard/reports/${report.id}`}
-                        className="flex min-w-0 flex-1 items-center gap-4"
-                      >
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-                          <FileText className="h-4 w-4 text-gray-500" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-gray-900">
-                            {report.date}
-                          </p>
-                          {report.summary ? (
-                            <p className="mt-0.5 truncate text-sm text-gray-500">
-                              {report.summary}
-                            </p>
-                          ) : (
-                            <p className="mt-0.5 text-sm italic text-gray-400">
-                              内容なし
-                            </p>
-                          )}
-                        </div>
-                        <Badge variant={config.variant}>{config.label}</Badge>
-                      </Link>
-                      <ReportDeleteButton reportId={report.id} status={report.status} />
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <RecentReportsList reports={recentReports} />
           </CardContent>
         </Card>
       </div>

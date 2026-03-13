@@ -2,17 +2,15 @@
 
 import { useState } from "react";
 import { Trash2, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 interface ReportDeleteButtonProps {
   reportId: string;
-  /** Only draft/generating can be deleted */
   status: string;
+  onDeleted?: (reportId: string) => void;
 }
 
-export function ReportDeleteButton({ reportId, status }: ReportDeleteButtonProps) {
+export function ReportDeleteButton({ reportId, status, onDeleted }: ReportDeleteButtonProps) {
   const [deleting, setDeleting] = useState(false);
-  const router = useRouter();
 
   if (status !== "draft" && status !== "generating") {
     return null;
@@ -28,7 +26,7 @@ export function ReportDeleteButton({ reportId, status }: ReportDeleteButtonProps
     try {
       const res = await fetch(`/api/reports/${reportId}`, { method: "DELETE" });
       if (res.ok) {
-        router.refresh();
+        onDeleted?.(reportId);
       }
     } catch {
       // ignore
