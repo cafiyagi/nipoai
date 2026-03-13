@@ -238,7 +238,7 @@ export function TemplateEditor({
                       label="AIへの指示"
                       value={section.ai_hint}
                       onChange={(e) => handleAiHintChange(index, e.target.value)}
-                      placeholder="例: 具体的な数値があれば褒めてください"
+                      placeholder="例: 箇条書きで簡潔にまとめる"
                     />
                     <p className="mt-1 text-xs text-gray-400">AIが日報を生成するとき、このセクションをどう書くかの指示です</p>
                   </div>
