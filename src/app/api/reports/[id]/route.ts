@@ -198,3 +198,88 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 }
+
+export async function DELETE(_request: Request, context: RouteContext) {
+  try {
+    const { id } = await context.params;
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Fetch the report
+    const { data: rawReport, error: fetchError } = await supabase
+      .from("daily_reports")
+      .select("id, workspace_id, user_id, status")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !rawReport) {
+      return NextResponse.json(
+        { error: "日報が見つかりません" },
+        { status: 404 },
+      );
+    }
+
+    const report = rawReport as unknown as Pick<
+      DailyReport,
+      "id" | "workspace_id" | "user_id" | "status"
+    >;
+
+    // Authorization: check membership
+    const { data: rawMembership } = await supabase
+      .from("user_workspace_memberships")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("workspace_id", report.workspace_id)
+      .single();
+
+    const membership = rawMembership as Pick<
+      UserWorkspaceMembership,
+      "role"
+    > | null;
+
+    if (!membership) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Only the report owner or admin can delete
+    if (membership.role !== "admin" && report.user_id !== user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Only draft/generating reports can be deleted
+    if (report.status !== "draft" && report.status !== "generating") {
+      return NextResponse.json(
+        { error: "提出済みの日報は削除できません" },
+        { status: 409 },
+      );
+    }
+
+    const { error: deleteError } = await supabase
+      .from("daily_reports")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      console.error("Failed to delete report:", deleteError);
+      return NextResponse.json(
+        { error: "日報の削除に失敗しました" },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("DELETE /api/reports/[id] error:", error);
+    return NextResponse.json(
+      { error: "サーバーエラーが発生しました" },
+      { status: 500 },
+    );
+  }
+}

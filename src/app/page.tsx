@@ -241,9 +241,9 @@ export default function LandingPage() {
                 {
                   step: "03",
                   icon: Send,
-                  title: "確認して提出",
+                  title: "確認して完了",
                   description:
-                    "生成された日報を確認し、必要なら編集。「提出」ボタンを押すだけで完了。",
+                    "生成された日報を確認し、必要なら編集。ワンクリックで提出完了。",
                 },
               ].map((item) => {
                 const Icon = item.icon;

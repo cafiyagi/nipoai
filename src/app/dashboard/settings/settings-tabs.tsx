@@ -39,6 +39,7 @@ interface SettingsTabsProps {
   memberCount: number;
   reportCount: number;
   template: ReportTemplate;
+  initialTab?: TabId;
 }
 
 // ---------------------------------------------------------------------------
@@ -123,8 +124,9 @@ export function SettingsTabs({
   memberCount,
   reportCount,
   template,
+  initialTab,
 }: SettingsTabsProps) {
-  const [activeTab, setActiveTab] = useState<TabId>("hub");
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab ?? "hub");
 
   const currentPlan = subscription?.plan ?? workspace.plan;
 

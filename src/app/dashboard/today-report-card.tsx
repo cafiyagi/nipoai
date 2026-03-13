@@ -156,7 +156,7 @@ export function TodayReportCard({
                 再生成
               </Button>
               <Link href={`/dashboard/reports/${reportId}`}>
-                <Button size="sm">確認して提出</Button>
+                <Button size="sm">確認する</Button>
               </Link>
             </div>
           )}

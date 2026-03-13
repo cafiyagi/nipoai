@@ -8,6 +8,7 @@ import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ReportDeleteButton } from "../report-delete-button";
 import type { ReportStatus, ReportContent, DailyReport } from "@/lib/supabase/types";
 
 // ---------------------------------------------------------------------------
@@ -147,13 +148,13 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
             {reports.map((report) => {
               const config = statusConfig[report.status];
               return (
-                <Link
-                  key={report.id}
-                  href={`/dashboard/reports/${report.id}`}
-                >
-                  <Card className="transition-shadow hover:shadow-md">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-4">
+                <Card key={report.id} className="transition-shadow hover:shadow-md">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-4">
+                      <Link
+                        href={`/dashboard/reports/${report.id}`}
+                        className="flex min-w-0 flex-1 items-start gap-4"
+                      >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100">
                           <FileText className="h-5 w-5 text-gray-500" />
                         </div>
@@ -176,10 +177,11 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
                             </p>
                           )}
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                      </Link>
+                      <ReportDeleteButton reportId={report.id} status={report.status} />
+                    </div>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>

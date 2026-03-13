@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TodayReportCard } from "./today-report-card";
+import { ReportDeleteButton } from "./report-delete-button";
 import type {
   ReportStatus,
   ReportContent,
@@ -197,7 +198,7 @@ export default async function DashboardPage() {
         <div className="mb-8 grid gap-4 sm:grid-cols-2">
           {/* Slack status card — entire card is a link */}
           <Link
-            href="/dashboard/settings"
+            href="/dashboard/settings?tab=slack"
             className="group block"
           >
             <Card className="transition-colors group-hover:border-gray-300">
@@ -275,30 +276,35 @@ export default async function DashboardPage() {
                 {recentReports.map((report) => {
                   const config = statusConfig[report.status];
                   return (
-                    <Link
+                    <div
                       key={report.id}
-                      href={`/dashboard/reports/${report.id}`}
                       className="-mx-2 flex items-center gap-4 rounded-lg px-2 py-3 transition-colors hover:bg-gray-50"
                     >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-                        <FileText className="h-4 w-4 text-gray-500" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-900">
-                          {report.date}
-                        </p>
-                        {report.summary ? (
-                          <p className="mt-0.5 truncate text-sm text-gray-500">
-                            {report.summary}
+                      <Link
+                        href={`/dashboard/reports/${report.id}`}
+                        className="flex min-w-0 flex-1 items-center gap-4"
+                      >
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100">
+                          <FileText className="h-4 w-4 text-gray-500" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-900">
+                            {report.date}
                           </p>
-                        ) : (
-                          <p className="mt-0.5 text-sm italic text-gray-400">
-                            内容なし
-                          </p>
-                        )}
-                      </div>
-                      <Badge variant={config.variant}>{config.label}</Badge>
-                    </Link>
+                          {report.summary ? (
+                            <p className="mt-0.5 truncate text-sm text-gray-500">
+                              {report.summary}
+                            </p>
+                          ) : (
+                            <p className="mt-0.5 text-sm italic text-gray-400">
+                              内容なし
+                            </p>
+                          )}
+                        </div>
+                        <Badge variant={config.variant}>{config.label}</Badge>
+                      </Link>
+                      <ReportDeleteButton reportId={report.id} status={report.status} />
+                    </div>
                   );
                 })}
               </div>

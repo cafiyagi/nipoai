@@ -5,7 +5,16 @@ import type { SlackIntegration, Subscription } from "@/lib/supabase/types";
 
 import { SettingsTabs } from "./settings-tabs";
 
-export default async function SettingsPage() {
+interface SettingsPageProps {
+  searchParams: Promise<{ tab?: string }>;
+}
+
+export default async function SettingsPage({ searchParams }: SettingsPageProps) {
+  const params = await searchParams;
+  const validTabs = ["general", "billing", "slack", "template", "account"] as const;
+  const initialTab = validTabs.includes(params.tab as typeof validTabs[number])
+    ? (params.tab as typeof validTabs[number])
+    : undefined;
   const { workspace, workspaceId, isAdmin, supabase } =
     await getWorkspaceContext();
 
@@ -65,6 +74,7 @@ export default async function SettingsPage() {
           memberCount={memberResult.count ?? 0}
           reportCount={reportResult.count ?? 0}
           template={template}
+          initialTab={initialTab}
         />
       </div>
     </div>
