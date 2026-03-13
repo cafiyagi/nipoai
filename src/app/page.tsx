@@ -13,12 +13,60 @@ import {
   ChevronRight,
   Hash,
   Bot,
+  BarChart3,
+  CalendarRange,
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FaqItem } from "@/components/ui/faq-item";
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      name: "NipoAI",
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      description:
+        "Slackの会話からAIが日報を自動生成。毎日15分の作成時間をゼロに。",
+      url: "https://nipoai.app",
+      offers: [
+        {
+          "@type": "Offer",
+          name: "Free",
+          price: "0",
+          priceCurrency: "JPY",
+          description: "3ユーザーまで、月10件の日報生成",
+        },
+        {
+          "@type": "Offer",
+          name: "Standard",
+          price: "1980",
+          priceCurrency: "JPY",
+          billingIncrement: "P1M",
+          description: "10ユーザーまで、無制限の日報生成",
+        },
+        {
+          "@type": "Offer",
+          name: "Team",
+          price: "4980",
+          priceCurrency: "JPY",
+          billingIncrement: "P1M",
+          description: "30ユーザーまで、高度なAI分析・チーム分析ダッシュボード",
+        },
+      ],
+    },
+  ],
+};
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* ── Header ── */}
       <header className="fixed top-0 z-50 w-full border-b border-gray-100 bg-white/80 backdrop-blur-lg">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:h-16 sm:px-6">
@@ -73,6 +121,10 @@ export default function LandingPage() {
               毎日15分のムダを、ワンクリックに変える。
             </p>
 
+            <p className="mx-auto mt-3 max-w-lg text-sm font-medium text-blue-600/80 sm:text-base">
+              Slack AIの要約とは違う。構造化された日報で、チームの可視化を。
+            </p>
+
             <div className="mt-8 flex flex-col items-center gap-3 sm:mt-10 sm:flex-row sm:justify-center sm:gap-4">
               <Link href="/signup" className="w-full sm:w-auto">
                 <Button size="lg" className="w-full sm:w-auto">
@@ -80,9 +132,22 @@ export default function LandingPage() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <p className="text-xs text-gray-400">
-                クレジットカード不要 / 1分でセットアップ
-              </p>
+            </div>
+
+            {/* Social proof badges */}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-gray-500 sm:text-sm">
+              <span className="flex items-center gap-1">
+                <Shield className="h-3.5 w-3.5 text-blue-500" />
+                AES-256-GCM暗号化
+              </span>
+              <span className="flex items-center gap-1">
+                <Zap className="h-3.5 w-3.5 text-blue-500" />
+                1分でSlack連携
+              </span>
+              <span className="flex items-center gap-1">
+                <Sparkles className="h-3.5 w-3.5 text-blue-500" />
+                クレジットカード不要で開始
+              </span>
             </div>
           </div>
 
@@ -329,6 +394,58 @@ export default function LandingPage() {
               );
             })}
           </div>
+
+          {/* Accumulated data value */}
+          <div className="mx-auto mt-10 max-w-5xl rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/80 to-indigo-50/60 p-6 sm:mt-14 sm:p-8">
+            <div className="text-center">
+              <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">
+                蓄積データの価値
+              </p>
+              <h3 className="mt-2 text-lg font-bold text-gray-900 sm:text-xl">
+                日報は「書く」から「活用する」時代へ
+              </h3>
+              <p className="mx-auto mt-2 max-w-2xl text-sm text-gray-500">
+                日々の日報データが蓄積されることで、チームの動きを数字で把握できるようになります。
+              </p>
+            </div>
+            <div className="mt-8 grid gap-6 sm:grid-cols-3">
+              {[
+                {
+                  icon: CalendarRange,
+                  title: "週報・月報の自動集約",
+                  description:
+                    "日報データを自動で週報・月報にまとめて出力。報告書作成の手間がなくなります。",
+                },
+                {
+                  icon: BarChart3,
+                  title: "チーム稼働状況の可視化",
+                  description:
+                    "メンバーごとの業務量・進捗をリアルタイムで把握。偏りや遅延を早期に発見。",
+                },
+                {
+                  icon: LayoutDashboard,
+                  title: "マネジメントダッシュボード",
+                  description:
+                    "チーム全体の健康状態を一目で確認。課題の傾向やボトルネックを可視化します。",
+                },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.title} className="text-center sm:text-left">
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-sm sm:mx-0">
+                      <Icon className="h-5 w-5 text-indigo-600" />
+                    </div>
+                    <h4 className="mt-3 text-sm font-semibold text-gray-900">
+                      {item.title}
+                    </h4>
+                    <p className="mt-1 text-sm leading-relaxed text-gray-500">
+                      {item.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -397,6 +514,45 @@ export default function LandingPage() {
               ]}
               cta="14日間無料で試す"
               highlighted={false}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section className="border-t border-gray-100 bg-gray-50/70" id="faq">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider">FAQ</p>
+            <h2 className="mt-2 text-2xl font-bold text-gray-900 sm:text-3xl">
+              よくある質問
+            </h2>
+          </div>
+
+          <div className="mx-auto mt-10 max-w-3xl divide-y divide-gray-200 sm:mt-14">
+            <FaqItem
+              question="NipoAIとは何ですか？"
+              answer="Slackの会話履歴からAIが日報を自動生成するサービスです。毎日Slackで交わされるメッセージを分析し、チームメンバーごとの日報を自動作成します。"
+            />
+            <FaqItem
+              question="Slack AIの要約機能とは何が違いますか？"
+              answer="Slack AIはチャンネルの会話を要約するだけですが、NipoAIは「日報」として構造化された形式で出力します。業務内容・課題・翌日の予定などを自動分類し、蓄積・分析・チーム管理ができます。"
+            />
+            <FaqItem
+              question="Slackのデータは安全ですか？"
+              answer="はい。Slackの認証トークンはAES-256-GCM方式で暗号化して保管しています。メッセージデータは日報生成後に保持せず、通信は全てHTTPSで暗号化されています。"
+            />
+            <FaqItem
+              question="無料プランでどこまで使えますか？"
+              answer="3名までのチームで月10件の日報生成が可能です。基本的な機能は全て使えるので、まずは無料でお試しください。"
+            />
+            <FaqItem
+              question="導入にどれくらい時間がかかりますか？"
+              answer="Slack連携は1分で完了します。アカウント作成→Slack連携→チャンネル選択の3ステップで、すぐに日報の自動生成を開始できます。"
+            />
+            <FaqItem
+              question="チームの一部だけで試せますか？"
+              answer="はい。特定のSlackチャンネルだけを選択して連携できるので、チームの一部から始めて、効果を確認してから全体に展開できます。"
             />
           </div>
         </div>
