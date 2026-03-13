@@ -436,10 +436,10 @@ export default function PrivacyPage() {
             <li>
               <strong>メールアドレス</strong>:{" "}
               <a
-                href="mailto:cafiyagi@gmail.com"
+                href="mailto:nipoaisupport@gmail.com"
                 className="text-blue-600 hover:underline"
               >
-                cafiyagi@gmail.com
+                nipoaisupport@gmail.com
               </a>
             </li>
           </ul>
@@ -483,7 +483,7 @@ export default function PrivacyPage() {
               <Link href="/privacy" className="transition-colors hover:text-gray-900">
                 プライバシーポリシー
               </Link>
-              <Link href="mailto:cafiyagi@gmail.com" className="transition-colors hover:text-gray-900">
+              <Link href="mailto:nipoaisupport@gmail.com" className="transition-colors hover:text-gray-900">
                 お問い合わせ
               </Link>
             </div>

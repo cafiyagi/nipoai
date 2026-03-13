@@ -54,10 +54,10 @@ export default function ContactPage() {
                 メールでのお問い合わせ
               </p>
               <a
-                href="mailto:cafiyagi@gmail.com"
+                href="mailto:nipoaisupport@gmail.com"
                 className="text-sm text-blue-600 underline underline-offset-2 hover:text-blue-700"
               >
-                cafiyagi@gmail.com
+                nipoaisupport@gmail.com
               </a>
             </div>
           </div>
@@ -76,7 +76,7 @@ export default function ContactPage() {
           </p>
 
           <form
-            action="mailto:cafiyagi@gmail.com"
+            action="mailto:nipoaisupport@gmail.com"
             method="POST"
             encType="text/plain"
             className="mt-6 space-y-5"

@@ -48,7 +48,7 @@ export default function LegalPage() {
           <LegalRow label="運営統括責任者" value="※ 請求があった場合に遅滞なく開示いたします" />
           <LegalRow label="所在地" value="※ 請求があった場合に遅滞なく開示いたします" />
           <LegalRow label="電話番号" value="※ 請求があった場合に遅滞なく開示いたします" />
-          <LegalRow label="メールアドレス" value="cafiyagi@gmail.com" />
+          <LegalRow label="メールアドレス" value="nipoaisupport@gmail.com" />
           <LegalRow label="URL" value="https://nipoai.app" isLink />
 
           <div className="py-5 sm:grid sm:grid-cols-3 sm:gap-4">

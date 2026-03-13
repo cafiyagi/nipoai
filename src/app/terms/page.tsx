@@ -309,8 +309,8 @@ export default function TermsPage() {
             <strong>運営者</strong>: NipoAI運営者
             <br />
             <strong>メール</strong>:{" "}
-            <a href="mailto:cafiyagi@gmail.com" className="text-blue-600 hover:underline">
-              cafiyagi@gmail.com
+            <a href="mailto:nipoaisupport@gmail.com" className="text-blue-600 hover:underline">
+              nipoaisupport@gmail.com
             </a>
             <br />
             <strong>URL</strong>:{" "}
@@ -344,7 +344,7 @@ export default function TermsPage() {
               <Link href="/privacy" className="transition-colors hover:text-gray-900">
                 プライバシーポリシー
               </Link>
-              <Link href="mailto:cafiyagi@gmail.com" className="transition-colors hover:text-gray-900">
+              <Link href="mailto:nipoaisupport@gmail.com" className="transition-colors hover:text-gray-900">
                 お問い合わせ
               </Link>
             </div>
