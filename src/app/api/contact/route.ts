@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     }
 
     await resend.emails.send({
-      from: "NipoAI <onboarding@resend.dev>",
+      from: "NipoAI <noreply@nipoai.app>",
       to: SUPPORT_EMAIL,
       replyTo: email,
       subject: `[お問い合わせ] ${subject}`,
