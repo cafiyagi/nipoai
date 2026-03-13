@@ -125,17 +125,10 @@ export function TodayReportCard({
           )}
 
           {state === "not_generated" && (
-            <>
-              <Button size="sm" onClick={() => handleGenerate()}>
-                <Sparkles className="mr-2 h-4 w-4" />
-                日報を生成する
-              </Button>
-              {reportGenerationTime && (
-                <span className="text-xs text-gray-400">
-                  自動生成: 毎日 {reportGenerationTime}
-                </span>
-              )}
-            </>
+            <Button size="sm" onClick={() => handleGenerate()}>
+              <Sparkles className="mr-2 h-4 w-4" />
+              日報を生成する
+            </Button>
           )}
 
           {state === "generating" && (
