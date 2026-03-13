@@ -19,7 +19,6 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
 import {
   DEFAULT_TEMPLATE,
@@ -210,8 +209,8 @@ export function TemplateEditor({
                 </div>
 
                 {/* Fields */}
-                <div className="flex min-w-0 flex-1 flex-col gap-2">
-                  <div className="flex flex-col gap-1">
+                <div className="flex min-w-0 flex-1 flex-col gap-3">
+                  <div>
                     <Input
                       label="セクション名"
                       value={section.label}
@@ -219,26 +218,30 @@ export function TemplateEditor({
                       placeholder="例: やったこと"
                       required
                     />
-                    <Badge variant="secondary" className="w-fit text-[10px]">
-                      key: {section.key}
-                    </Badge>
+                    <p className="mt-1 text-xs text-gray-400">日報の入力欄の見出しになります</p>
                   </div>
 
-                  <Input
-                    label="プレースホルダー"
-                    value={section.placeholder}
-                    onChange={(e) =>
-                      handlePlaceholderChange(index, e.target.value)
-                    }
-                    placeholder="テキストエリアのプレースホルダー"
-                  />
+                  <div>
+                    <Input
+                      label="入力例"
+                      value={section.placeholder}
+                      onChange={(e) =>
+                        handlePlaceholderChange(index, e.target.value)
+                      }
+                      placeholder="例: 今日完了したタスクを箇条書きで記入"
+                    />
+                    <p className="mt-1 text-xs text-gray-400">社員が日報を書くとき、入力欄にうすく表示される案内文です</p>
+                  </div>
 
-                  <Input
-                    label="AIへのヒント"
-                    value={section.ai_hint}
-                    onChange={(e) => handleAiHintChange(index, e.target.value)}
-                    placeholder="例: 数値を含めて報告"
-                  />
+                  <div>
+                    <Input
+                      label="AIへの指示"
+                      value={section.ai_hint}
+                      onChange={(e) => handleAiHintChange(index, e.target.value)}
+                      placeholder="例: 具体的な数値があれば褒めてください"
+                    />
+                    <p className="mt-1 text-xs text-gray-400">AIが日報を生成するとき、このセクションをどう書くかの指示です</p>
+                  </div>
                 </div>
 
                 {/* Delete button */}
