@@ -67,8 +67,16 @@ export default function LandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {/* ── Beta Banner ── */}
+      <div className="fixed top-0 z-50 w-full bg-gradient-to-r from-orange-500 to-amber-500 py-2 text-center text-xs font-medium text-white sm:text-sm">
+        先着20社限定：3ヶ月無料 + 永久20%OFF のベータプログラム受付中
+        <a href="#pricing" className="ml-2 inline-flex items-center underline underline-offset-2 hover:opacity-80">
+          詳しく見る <span className="ml-0.5">&rarr;</span>
+        </a>
+      </div>
+
       {/* ── Header ── */}
-      <header className="fixed top-0 z-50 w-full border-b border-gray-100 bg-white/80 backdrop-blur-lg">
+      <header className="fixed top-8 z-50 w-full border-b border-gray-100 bg-white/80 backdrop-blur-lg sm:top-10">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:h-16 sm:px-6">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">
@@ -84,7 +92,7 @@ export default function LandingPage() {
             </Link>
             <Link href="/signup">
               <Button size="sm">
-                無料で始める
+                ベータ参加
               </Button>
             </Link>
           </div>
@@ -92,7 +100,7 @@ export default function LandingPage() {
       </header>
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden pt-14 sm:pt-16">
+      <section className="relative overflow-hidden pt-24 sm:pt-28">
         {/* Background decoration */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 right-0 h-[500px] w-[500px] rounded-full bg-blue-50 opacity-60 blur-3xl" />
@@ -102,9 +110,9 @@ export default function LandingPage() {
         <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-16 sm:px-6 sm:pb-24 sm:pt-24 lg:pt-28">
           <div className="mx-auto max-w-3xl text-center">
             {/* Badge */}
-            <div className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 sm:text-sm">
-              <Zap className="h-3.5 w-3.5" />
-              Slack連携で即日スタート
+            <div className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-orange-300 bg-orange-50 px-3 py-1 text-xs font-medium text-orange-700 sm:text-sm">
+              <Sparkles className="h-3.5 w-3.5" />
+              先着20社限定 ベータ募集中
             </div>
 
             <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
@@ -128,7 +136,7 @@ export default function LandingPage() {
             <div className="mt-8 flex flex-col items-center gap-3 sm:mt-10 sm:flex-row sm:justify-center sm:gap-4">
               <Link href="/signup" className="w-full sm:w-auto">
                 <Button size="lg" className="w-full sm:w-auto">
-                  無料で始める
+                  ベータに参加する（無料）
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
@@ -563,10 +571,10 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-2xl font-bold text-white sm:text-3xl">
-              日報作成のムダ、今日で終わりにしませんか？
+              先着20社限定。ベータプログラムに参加しませんか？
             </h2>
             <p className="mt-3 text-blue-100">
-              1分のセットアップで、チーム全員の日報が自動化されます。
+              3ヶ月間完全無料 + 正式リリース後は永久20%OFF。
             </p>
             <div className="mt-8">
               <Link href="/signup">
@@ -574,12 +582,15 @@ export default function LandingPage() {
                   size="lg"
                   className="bg-white text-blue-600 hover:bg-blue-50 focus-visible:ring-white"
                 >
-                  無料で始める
+                  ベータに参加する
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
             </div>
-            <p className="mt-4 text-xs text-blue-200">
+            <p className="mt-3 text-sm font-semibold text-orange-300">
+              残り枠：あと18社
+            </p>
+            <p className="mt-2 text-xs text-blue-200">
               クレジットカード不要 / セットアップ1分 / いつでもキャンセル可能
             </p>
           </div>
