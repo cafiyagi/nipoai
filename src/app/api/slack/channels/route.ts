@@ -72,7 +72,7 @@ export async function GET(request: Request) {
 
     while (hasMore) {
       const result = await slackClient.conversations.list({
-        types: "public_channel",
+        types: "public_channel,private_channel",
         exclude_archived: true,
         limit: 200,
         cursor,

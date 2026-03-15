@@ -23,8 +23,13 @@ export async function fetchChannelMessages(
   // Ensure bot is in the channel before fetching messages
   try {
     await client.conversations.join({ channel: channelId });
-  } catch {
-    // Ignore errors (e.g. already in channel, or private channel)
+  } catch (joinError) {
+    // Private channels can't be joined via API — that's OK if bot is already a member.
+    // Log for debugging but don't block.
+    console.warn(
+      `conversations.join failed for ${channelId} (may be private):`,
+      joinError instanceof Error ? joinError.message : joinError,
+    );
   }
 
   const messages: SlackMessage[] = [];

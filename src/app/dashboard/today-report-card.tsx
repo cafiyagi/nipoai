@@ -166,7 +166,7 @@ export function TodayReportCard({
           {errorMessage && (
             <div className="flex flex-col items-start gap-1">
               <p className="text-xs text-red-600">{errorMessage}</p>
-              {(errorCode === "NO_SLACK" || errorCode === "NO_CHANNELS") && (
+              {(errorCode === "NO_SLACK" || errorCode === "NO_CHANNELS" || errorCode === "FETCH_FAILED") && (
                 <Link href="/dashboard/settings" className="text-xs text-blue-600 hover:underline">
                   設定画面を開く →
                 </Link>

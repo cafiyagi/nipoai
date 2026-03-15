@@ -244,6 +244,7 @@ export async function POST(request: Request) {
 
     // Collect messages from all selected channels
     const allMessages = [];
+    const failedChannels: string[] = [];
     for (const channelId of channelIds) {
       try {
         const messages = await fetchChannelMessages(
@@ -258,7 +259,20 @@ export async function POST(request: Request) {
           `Manual generate: Failed to fetch messages from channel ${channelId}:`,
           channelError,
         );
+        failedChannels.push(channelId);
       }
+    }
+
+    // If ALL channels failed, surface a meaningful error
+    if (failedChannels.length === channelIds.length) {
+      return NextResponse.json(
+        {
+          error:
+            "Slackチャンネルからメッセージを取得できませんでした。ボットがチャンネルに招待されているか確認してください。プライベートチャンネルの場合は、Slackを再連携する必要があります。",
+          code: "FETCH_FAILED",
+        },
+        { status: 400 },
+      );
     }
 
     // Preprocess all messages
@@ -276,7 +290,7 @@ export async function POST(request: Request) {
     const profileData = rawProfile as unknown as { display_name: string | null } | null;
     const userName = profileData?.display_name ?? "メンバー";
 
-    if (preprocessed.length < 2) {
+    if (preprocessed.length < 1) {
       return NextResponse.json(
         {
           error:

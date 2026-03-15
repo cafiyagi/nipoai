@@ -4,7 +4,7 @@ import { randomBytes } from "crypto";
 
 const SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID!;
 const SLACK_SCOPES =
-  "channels:history,channels:read,chat:write,im:write,users:read";
+  "channels:history,channels:read,groups:history,groups:read,chat:write,im:write,users:read";
 
 export async function GET(request: Request) {
   try {

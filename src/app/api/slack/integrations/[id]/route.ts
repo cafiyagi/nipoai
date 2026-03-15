@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createSlackClient } from "@/lib/slack/client";
 import type { UserWorkspaceMembership, SlackIntegration } from "@/lib/supabase/types";
 
 interface RouteContext {
@@ -67,6 +68,13 @@ export async function PATCH(request: Request, context: RouteContext) {
       );
     }
 
+    // Fetch the bot token so we can join channels
+    const { data: rawFullIntegration } = await admin
+      .from("slack_integrations")
+      .select("encrypted_bot_token")
+      .eq("id", integrationId)
+      .single();
+
     const { error: updateError } = await admin
       .from("slack_integrations")
       .update({ selected_channel_ids } as never)
@@ -78,6 +86,30 @@ export async function PATCH(request: Request, context: RouteContext) {
         { error: "Failed to update integration" },
         { status: 500 },
       );
+    }
+
+    // Auto-join bot to selected channels
+    if (rawFullIntegration) {
+      const fullIntegration = rawFullIntegration as { encrypted_bot_token: string };
+      const slackClient = createSlackClient(fullIntegration.encrypted_bot_token);
+      const joinErrors: string[] = [];
+
+      for (const channelId of selected_channel_ids) {
+        try {
+          await slackClient.conversations.join({ channel: channelId });
+        } catch {
+          // Private channels can't be joined via API — bot must already be invited
+          joinErrors.push(channelId);
+        }
+      }
+
+      if (joinErrors.length > 0) {
+        return NextResponse.json({
+          success: true,
+          warning: `一部のプライベートチャンネルにはボットを自動追加できませんでした。Slackで /invite @NipoAI を実行してください。`,
+          failed_channels: joinErrors,
+        });
+      }
     }
 
     return NextResponse.json({ success: true });
