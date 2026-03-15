@@ -3,6 +3,7 @@ import { timingSafeEqual } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { getXClient } from "@/lib/x/client";
 import { replenishTweetQueue } from "@/lib/x/generate-tweet";
+import { detectAndQueueBuzzTweets } from "@/lib/x/detect-buzz";
 
 const QUEUE_LOW_THRESHOLD = 7;
 
@@ -91,10 +92,22 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Buzz article detection & tweet generation
+    let buzzResult = null;
+    try {
+      buzzResult = await detectAndQueueBuzzTweets();
+    } catch (buzzError) {
+      console.error(
+        "[cron/post-x] Buzz detection failed:",
+        buzzError instanceof Error ? buzzError.message : buzzError,
+      );
+    }
+
     return NextResponse.json({
       success: true,
       remaining: remaining ?? 0,
       replenish: replenishResult,
+      buzz: buzzResult,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
