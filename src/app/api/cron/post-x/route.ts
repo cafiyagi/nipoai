@@ -46,7 +46,12 @@ export async function GET(req: NextRequest) {
 
   try {
     const client = getXClient();
-    const { data } = await client.v2.tweet(post.content);
+    const { data } = post.quote_tweet_id
+      ? await client.v2.tweet({
+          text: post.content,
+          quote_tweet_id: post.quote_tweet_id,
+        })
+      : await client.v2.tweet(post.content);
 
     const { error: updateError } = await supabase
       .from("scheduled_posts")
