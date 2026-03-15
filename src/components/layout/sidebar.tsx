@@ -11,6 +11,7 @@ import {
   LogOut,
   X,
   Menu,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
@@ -46,12 +47,20 @@ interface NavItem {
   icon: typeof Home;
 }
 
+const SUPER_ADMIN_EMAILS = ["cafiyagi@gmail.com"];
+
 const navItems: NavItem[] = [
   { label: "ダッシュボード", href: "/dashboard", icon: Home },
   { label: "日報一覧", href: "/dashboard/reports", icon: FileText },
   { label: "チーム", href: "/dashboard/team", icon: Users },
   { label: "設定", href: "/dashboard/settings", icon: Settings },
 ];
+
+const adminNavItem: NavItem = {
+  label: "管理者",
+  href: "/dashboard/admin",
+  icon: Shield,
+};
 
 // ---------------------------------------------------------------------------
 // SidebarContent (inner, shared between mobile + desktop)
@@ -103,7 +112,7 @@ function SidebarContent({
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4">
         <ul className="flex flex-col gap-1">
-          {navItems.map((item) => {
+          {[...navItems, ...(SUPER_ADMIN_EMAILS.includes(user.email) ? [adminNavItem] : [])].map((item) => {
             const isActive =
               item.href === "/dashboard"
                 ? pathname === "/dashboard"
