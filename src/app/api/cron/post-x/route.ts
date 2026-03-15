@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { getXClient } from "@/lib/x/client";
+import { replenishTweetQueue } from "@/lib/x/generate-tweet";
 
-const QUEUE_LOW_THRESHOLD = 3;
+const QUEUE_LOW_THRESHOLD = 7;
 
 function verifySecret(header: string | null, expected: string): boolean {
   if (!header || !header.startsWith("Bearer ")) return false;
@@ -71,11 +72,25 @@ export async function GET(req: NextRequest) {
       .eq("platform", "x")
       .eq("status", "pending");
 
-    if (remaining !== null && remaining <= QUEUE_LOW_THRESHOLD) {
-      console.warn(`[cron/post-x] Queue low: ${remaining} remaining`);
+    // Auto-replenish queue if running low
+    let replenishResult = null;
+    if (remaining !== null && remaining < QUEUE_LOW_THRESHOLD) {
+      console.log(`[cron/post-x] Queue low (${remaining}), triggering replenish`);
+      try {
+        replenishResult = await replenishTweetQueue();
+      } catch (replenishError) {
+        console.error(
+          "[cron/post-x] Replenish failed:",
+          replenishError instanceof Error ? replenishError.message : replenishError,
+        );
+      }
     }
 
-    return NextResponse.json({ success: true, remaining: remaining ?? 0 });
+    return NextResponse.json({
+      success: true,
+      remaining: remaining ?? 0,
+      replenish: replenishResult,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
 
