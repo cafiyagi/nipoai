@@ -56,8 +56,8 @@ export default function LegalPage() {
             <dd className="mt-1 text-sm text-gray-600 sm:col-span-2 sm:mt-0">
               <ul className="space-y-1">
                 <li>Free プラン: 0円（永久無料）</li>
-                <li>Standard プラン: 1,980円/月（税込）</li>
-                <li>Team プラン: 4,980円/月（税込）</li>
+                <li>Starter プラン: 550円/月（税込）</li>
+                <li>Team プラン: 1,250円/月（税込）</li>
               </ul>
               <p className="mt-2 text-xs text-gray-400">
                 ※ 上記は全て税込価格です。別途費用は発生しません。
@@ -98,7 +98,7 @@ export default function LegalPage() {
                   解約手続きはアカウント設定画面から行えます。
                 </li>
                 <li>
-                  無料トライアル期間中に解約した場合、料金は発生しません。
+                  Freeプランは無料でご利用いただけます。有料プランへの切り替え前にFreeプランで機能をお試しいただけます。
                 </li>
               </ul>
             </dd>

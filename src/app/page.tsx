@@ -458,7 +458,7 @@ export default function LandingPage() {
               シンプルな料金、隠しコストなし
             </h2>
             <p className="mt-3 text-gray-500">
-              ワークスペース単位の課金。すべてのプランに14日間の無料トライアル付き。
+              ワークスペース単位の課金。いつでもプラン変更・キャンセル可能。
             </p>
           </div>
 
@@ -493,7 +493,7 @@ export default function LandingPage() {
                 "CSV / PDFエクスポート",
                 "メール通知",
               ]}
-              cta="14日間無料で試す"
+              cta="Standardを始める"
               highlighted={true}
             />
 
@@ -512,7 +512,7 @@ export default function LandingPage() {
                 "API連携",
                 "優先サポート",
               ]}
-              cta="14日間無料で試す"
+              cta="Teamを始める"
               highlighted={false}
             />
           </div>
