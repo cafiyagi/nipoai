@@ -84,8 +84,8 @@ export function MemberRoleSelect({
       <span
         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
           role === "admin"
-            ? "bg-blue-50 text-blue-700"
-            : "bg-gray-100 text-gray-600"
+            ? "bg-[var(--accent-bg)] text-[var(--accent)]"
+            : "bg-[var(--bg-hover)] text-[var(--text-secondary)]"
         }`}
       >
         {role === "admin" ? "管理者" : "メンバー"}
@@ -99,7 +99,7 @@ export function MemberRoleSelect({
         value={role}
         onChange={(e) => handleChange(e.target.value)}
         disabled={loading}
-        className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-xs font-medium text-gray-700 transition-colors hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50"
+        className="h-8 rounded-lg border border-[var(--border-primary)] bg-[var(--bg-secondary)] px-2 text-xs font-medium text-[var(--text-primary)] transition-colors hover:border-[var(--border-secondary)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 disabled:opacity-50"
       >
         <option value="admin">管理者</option>
         <option value="member">メンバー</option>
@@ -107,7 +107,7 @@ export function MemberRoleSelect({
       <button
         onClick={handleRemove}
         disabled={loading}
-        className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+        className="rounded-lg p-1.5 text-[var(--text-muted)] transition-colors hover:bg-[var(--danger-bg)] hover:text-[var(--danger)] disabled:opacity-50"
         title="メンバーを削除"
       >
         <Trash2 className="h-4 w-4" />

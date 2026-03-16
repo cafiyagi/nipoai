@@ -95,8 +95,8 @@ function LoginForm() {
             <div
               className={`rounded-lg px-4 py-3 text-sm ${
                 urlMessage === "confirm_email"
-                  ? "bg-blue-50 text-blue-700"
-                  : "bg-red-50 text-red-700"
+                  ? "bg-[var(--accent-bg)] text-[var(--accent)]"
+                  : "bg-[var(--danger-bg)] text-[var(--danger)]"
               }`}
               role="alert"
             >
@@ -107,7 +107,7 @@ function LoginForm() {
           {/* Inline error */}
           {error && (
             <div
-              className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700"
+              className="rounded-lg bg-[var(--danger-bg)] px-4 py-3 text-sm text-[var(--danger)]"
               role="alert"
             >
               {error}
@@ -147,10 +147,10 @@ function LoginForm() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
+              <div className="w-full border-t border-[var(--border-primary)]" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-4 text-gray-400">または</span>
+              <span className="bg-[var(--bg-card)] px-4 text-[var(--text-muted)]">または</span>
             </div>
           </div>
 
@@ -182,11 +182,11 @@ function LoginForm() {
           </form>
 
           {/* Signup link */}
-          <p className="text-center text-sm text-gray-500">
+          <p className="text-center text-sm text-[var(--text-secondary)]">
             アカウントをお持ちでない方は{" "}
             <Link
               href="/signup"
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-medium text-[var(--accent)] hover:opacity-80"
             >
               新規登録
             </Link>

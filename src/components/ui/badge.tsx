@@ -8,11 +8,11 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-  default: "bg-blue-100 text-blue-700",
-  secondary: "bg-gray-100 text-gray-700",
-  outline: "border border-gray-300 text-gray-700 bg-transparent",
-  destructive: "bg-red-100 text-red-700",
-  success: "bg-green-100 text-green-700",
+  default: "bg-[var(--accent-bg)] text-[var(--accent)]",
+  secondary: "bg-[var(--bg-hover)] text-[var(--text-secondary)]",
+  outline: "border border-[var(--border-primary)] text-[var(--text-secondary)] bg-transparent",
+  destructive: "bg-[var(--danger-bg)] text-[var(--danger)]",
+  success: "bg-[var(--success-bg)] text-[var(--success)]",
 };
 
 function Badge({ className, variant = "default", ...props }: BadgeProps) {

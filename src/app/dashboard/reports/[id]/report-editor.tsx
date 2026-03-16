@@ -170,7 +170,7 @@ export function ReportEditor({ initialReport }: ReportEditorProps) {
   return (
     <div className="p-6">
       {/* Sticky header: Back button + date + status + actions */}
-      <div className="sticky top-0 z-10 -mx-6 mb-6 border-b border-gray-200 bg-white/95 px-6 py-4 backdrop-blur-sm">
+      <div className="sticky top-0 z-10 -mx-6 mb-6 border-b border-[var(--border-primary)] px-6 py-4 backdrop-blur-sm" style={{ backgroundColor: "color-mix(in srgb, var(--bg-secondary) 95%, transparent)" }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
@@ -182,7 +182,7 @@ export function ReportEditor({ initialReport }: ReportEditorProps) {
               戻る
             </Button>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                 {initialReport.reportDate}
               </h2>
               <Badge variant={statusVariant} className="mt-1">
@@ -231,7 +231,7 @@ export function ReportEditor({ initialReport }: ReportEditorProps) {
                   .getElementById(`section-${section.key}`)
                   ?.scrollIntoView({ behavior: "smooth", block: "start" });
               }}
-              className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              className="rounded-full border border-[var(--border-primary)] bg-[var(--bg-card)] px-3 py-1 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
             >
               {section.label}
             </button>
@@ -250,7 +250,7 @@ export function ReportEditor({ initialReport }: ReportEditorProps) {
               {isEditable ? (
                 <textarea
                   ref={(el) => autoResize(el)}
-                  className="min-h-[80px] w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+                  className="min-h-[80px] w-full resize-none rounded-lg border border-[var(--border-primary)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-colors focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 disabled:cursor-not-allowed disabled:opacity-50"
                   value={sectionTexts[section.key] ?? ""}
                   onChange={(e) => {
                     handleSectionChange(section.key, e.target.value);
@@ -260,7 +260,7 @@ export function ReportEditor({ initialReport }: ReportEditorProps) {
                   aria-label={section.label}
                 />
               ) : (
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-[var(--text-secondary)]">
                   {(sectionTexts[section.key] ?? "")
                     .split("\n")
                     .map((line, i) => (
@@ -269,7 +269,7 @@ export function ReportEditor({ initialReport }: ReportEditorProps) {
                       </p>
                     ))}
                   {!(sectionTexts[section.key] ?? "").trim() && (
-                    <p className="italic text-gray-400">内容なし</p>
+                    <p className="italic text-[var(--text-muted)]">内容なし</p>
                   )}
                 </div>
               )}

@@ -92,7 +92,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
               <ChevronLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <span className="min-w-[120px] text-center text-sm font-medium text-gray-900">
+          <span className="min-w-[120px] text-center text-sm font-medium text-[var(--text-primary)]">
             {monthLabel}
           </span>
           {!isCurrentMonth ? (

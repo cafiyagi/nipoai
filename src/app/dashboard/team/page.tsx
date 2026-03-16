@@ -84,10 +84,10 @@ export default async function TeamPage() {
         {/* Header with invite button */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">
               メンバー一覧
             </h2>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
               {members.length}人のメンバー
             </p>
           </div>
@@ -99,7 +99,7 @@ export default async function TeamPage() {
           <CardContent className="p-0">
             {members.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[var(--text-secondary)]">
                   メンバーがいません。招待してチームを作りましょう。
                 </p>
               </div>
@@ -109,29 +109,29 @@ export default async function TeamPage() {
                 <div className="hidden sm:block">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-gray-100">
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      <tr className="border-b border-[var(--border-primary)]">
+                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
                           メンバー
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
                           ロール
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
                           最終日報日
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-[var(--border-primary)]">
                       {members.map((member) => (
-                        <tr key={member.id} className="hover:bg-gray-50">
+                        <tr key={member.id} className="hover:bg-[var(--bg-hover)]">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
                               <Avatar name={member.name} size="sm" />
                               <div>
-                                <p className="text-sm font-medium text-gray-900">
+                                <p className="text-sm font-medium text-[var(--text-primary)]">
                                   {member.name}
                                 </p>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-sm text-[var(--text-secondary)]">
                                   {member.email}
                                 </p>
                               </div>
@@ -147,7 +147,7 @@ export default async function TeamPage() {
                               isAdmin={isAdmin}
                             />
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">
+                          <td className="px-6 py-4 text-sm text-[var(--text-secondary)]">
                             {member.lastReport ?? "未提出"}
                           </td>
                         </tr>
@@ -157,7 +157,7 @@ export default async function TeamPage() {
                 </div>
 
                 {/* Mobile list */}
-                <div className="flex flex-col divide-y divide-gray-100 sm:hidden">
+                <div className="flex flex-col divide-y divide-[var(--border-primary)] sm:hidden">
                   {members.map((member) => (
                     <div
                       key={member.id}
@@ -166,7 +166,7 @@ export default async function TeamPage() {
                       <Avatar name={member.name} size="sm" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="truncate text-sm font-medium text-gray-900">
+                          <p className="truncate text-sm font-medium text-[var(--text-primary)]">
                             {member.name}
                           </p>
                           <MemberRoleSelect
@@ -178,7 +178,7 @@ export default async function TeamPage() {
                             isAdmin={isAdmin}
                           />
                         </div>
-                        <p className="mt-0.5 text-xs text-gray-500">
+                        <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
                           最終日報: {member.lastReport ?? "未提出"}
                         </p>
                       </div>

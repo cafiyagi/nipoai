@@ -53,7 +53,7 @@ function Dialog({
       <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
       <div
         className={cn(
-          "relative z-50 w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-lg",
+          "relative z-50 w-full max-w-md rounded-xl border border-[var(--border-primary)] bg-[var(--bg-card)] p-6 shadow-lg",
           className
         )}
         role="dialog"
@@ -65,19 +65,19 @@ function Dialog({
           <div className="flex flex-col gap-1">
             <h2
               id="dialog-title"
-              className="text-lg font-semibold text-gray-900"
+              className="text-lg font-semibold text-[var(--text-primary)]"
             >
               {title}
             </h2>
             {description && (
-              <p id="dialog-description" className="text-sm text-gray-500">
+              <p id="dialog-description" className="text-sm text-[var(--text-secondary)]">
                 {description}
               </p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-lg p-1 text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
             aria-label="閉じる"
           >
             <X className="h-5 w-5" />

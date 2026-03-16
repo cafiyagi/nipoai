@@ -35,14 +35,14 @@ export function ReportsList({ reports: initialReports }: { reports: ReportItem[]
 
   if (reports.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white py-16 text-center shadow-sm">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-          <FileText className="h-6 w-6 text-gray-400" />
+      <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border-primary)] bg-[var(--bg-card)] py-16 text-center shadow-sm">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--bg-hover)]">
+          <FileText className="h-6 w-6 text-[var(--text-muted)]" />
         </div>
-        <p className="mt-4 text-sm font-medium text-gray-900">
+        <p className="mt-4 text-sm font-medium text-[var(--text-primary)]">
           まだ日報がありません
         </p>
-        <p className="mt-1 max-w-xs text-sm text-gray-500">
+        <p className="mt-1 max-w-xs text-sm text-[var(--text-secondary)]">
           Slackを連携すると自動で日報が生成されます。
         </p>
         <Link href="/dashboard/slack" className="mt-4">
@@ -67,12 +67,12 @@ export function ReportsList({ reports: initialReports }: { reports: ReportItem[]
                   href={`/dashboard/reports/${report.id}`}
                   className="flex min-w-0 flex-1 items-start gap-4"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-                    <FileText className="h-5 w-5 text-gray-500" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--bg-hover)]">
+                    <FileText className="h-5 w-5 text-[var(--text-secondary)]" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-medium text-gray-900">
+                      <h3 className="text-sm font-medium text-[var(--text-primary)]">
                         {report.date}
                       </h3>
                       <Badge variant={config.variant}>
@@ -80,11 +80,11 @@ export function ReportsList({ reports: initialReports }: { reports: ReportItem[]
                       </Badge>
                     </div>
                     {report.summary ? (
-                      <p className="mt-1 line-clamp-2 text-sm text-gray-500">
+                      <p className="mt-1 line-clamp-2 text-sm text-[var(--text-secondary)]">
                         {report.summary}
                       </p>
                     ) : (
-                      <p className="mt-1 text-sm italic text-gray-400">
+                      <p className="mt-1 text-sm italic text-[var(--text-muted)]">
                         日報が生成されていません
                       </p>
                     )}

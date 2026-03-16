@@ -38,15 +38,15 @@ const variantConfig: Record<
   { className: string; icon: typeof CheckCircle }
 > = {
   success: {
-    className: "border-green-200 bg-green-50 text-green-800",
+    className: "border-[var(--success)] bg-[var(--success-bg)] text-[var(--success)]",
     icon: CheckCircle,
   },
   error: {
-    className: "border-red-200 bg-red-50 text-red-800",
+    className: "border-[var(--danger)] bg-[var(--danger-bg)] text-[var(--danger)]",
     icon: AlertCircle,
   },
   info: {
-    className: "border-blue-200 bg-blue-50 text-blue-800",
+    className: "border-[var(--accent)] bg-[var(--accent-bg)] text-[var(--accent)]",
     icon: Info,
   },
 };
