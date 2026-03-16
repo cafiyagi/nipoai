@@ -62,7 +62,7 @@ export function GeneralSettings({ workspace, isAdmin }: GeneralSettingsProps) {
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
-          <Settings className="h-5 w-5 text-gray-400" />
+          <Settings className="h-5 w-5 text-[var(--text-muted)]" />
           <CardTitle>ワークスペース設定</CardTitle>
         </div>
         <CardDescription>
@@ -71,8 +71,8 @@ export function GeneralSettings({ workspace, isAdmin }: GeneralSettingsProps) {
       </CardHeader>
       <CardContent>
         {!isAdmin && (
-          <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
-            <p className="text-sm text-blue-700">
+          <div className="mb-4 rounded-lg border border-[var(--accent)]/30 bg-[var(--accent-bg)] p-3">
+            <p className="text-sm text-[var(--accent)]">
               この設定は管理者のみ変更できます。
             </p>
           </div>

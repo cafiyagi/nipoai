@@ -59,10 +59,10 @@ export function AccountSettings({
   return (
     <>
       {/* 警告バナー */}
-      <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
+      <div className="mb-6 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-amber-600" />
-          <p className="text-sm font-medium text-amber-800">
+          <AlertTriangle className="h-5 w-5 text-amber-400" />
+          <p className="text-sm font-medium text-amber-300">
             この画面の操作は取り消すことができません。
           </p>
         </div>
@@ -72,21 +72,21 @@ export function AccountSettings({
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-gray-100 p-3">
-              <p className="text-xs text-gray-500">ワークスペース名</p>
-              <p className="mt-1 font-medium text-gray-900">
+            <div className="rounded-lg border border-[var(--border-primary)] p-3">
+              <p className="text-xs text-[var(--text-secondary)]">ワークスペース名</p>
+              <p className="mt-1 font-medium text-[var(--text-primary)]">
                 {workspace.name}
               </p>
             </div>
-            <div className="rounded-lg border border-gray-100 p-3">
-              <p className="text-xs text-gray-500">メンバー数</p>
-              <p className="mt-1 font-medium text-gray-900">
+            <div className="rounded-lg border border-[var(--border-primary)] p-3">
+              <p className="text-xs text-[var(--text-secondary)]">メンバー数</p>
+              <p className="mt-1 font-medium text-[var(--text-primary)]">
                 {memberCount}人
               </p>
             </div>
-            <div className="rounded-lg border border-gray-100 p-3">
-              <p className="text-xs text-gray-500">作成日</p>
-              <p className="mt-1 font-medium text-gray-900">
+            <div className="rounded-lg border border-[var(--border-primary)] p-3">
+              <p className="text-xs text-[var(--text-secondary)]">作成日</p>
+              <p className="mt-1 font-medium text-[var(--text-primary)]">
                 {formatDate(workspace.created_at)}
               </p>
             </div>
@@ -95,23 +95,23 @@ export function AccountSettings({
       </Card>
 
       {/* 削除セクション */}
-      <Card className="border-red-200">
+      <Card className="border-[var(--danger)]/30">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-red-500" />
-            <CardTitle className="text-red-700">危険な操作</CardTitle>
+            <AlertCircle className="h-5 w-5 text-[var(--danger)]" />
+            <CardTitle className="text-[var(--danger)]">危険な操作</CardTitle>
           </div>
           <CardDescription>
             これらの操作は取り消すことができません。
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between rounded-lg border border-red-100 bg-red-50 p-4">
+          <div className="flex items-center justify-between rounded-lg border border-[var(--danger)]/30 bg-[var(--danger-bg)] p-4">
             <div>
-              <p className="font-medium text-red-800">
+              <p className="font-medium text-[var(--danger)]">
                 アカウントを削除する
               </p>
-              <p className="mt-0.5 text-sm text-red-600">
+              <p className="mt-0.5 text-sm text-[var(--danger)]">
                 すべてのデータが永久に削除されます。
               </p>
             </div>

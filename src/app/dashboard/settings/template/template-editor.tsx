@@ -171,7 +171,7 @@ export function TemplateEditor({
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
-          <FileText className="h-5 w-5 text-gray-400" />
+          <FileText className="h-5 w-5 text-[var(--text-muted)]" />
           <CardTitle>日報テンプレート</CardTitle>
         </div>
         <CardDescription>
@@ -183,7 +183,7 @@ export function TemplateEditor({
           {sections.map((section, index) => (
             <div
               key={section.key}
-              className="rounded-lg border border-gray-200 bg-gray-50/50 p-4"
+              className="rounded-lg border border-[var(--border-primary)] bg-[var(--bg-hover)]/50 p-4"
             >
               <div className="flex items-start gap-3">
                 {/* Reorder buttons */}
@@ -192,7 +192,7 @@ export function TemplateEditor({
                     type="button"
                     onClick={() => handleMoveUp(index)}
                     disabled={index === 0}
-                    className="rounded p-0.5 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30"
+                    className="rounded p-0.5 text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-30"
                     aria-label="上に移動"
                   >
                     <ArrowUp className="h-4 w-4" />
@@ -201,7 +201,7 @@ export function TemplateEditor({
                     type="button"
                     onClick={() => handleMoveDown(index)}
                     disabled={index === sections.length - 1}
-                    className="rounded p-0.5 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-30"
+                    className="rounded p-0.5 text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-30"
                     aria-label="下に移動"
                   >
                     <ArrowDown className="h-4 w-4" />
@@ -218,7 +218,7 @@ export function TemplateEditor({
                       placeholder="例: やったこと"
                       required
                     />
-                    <p className="mt-1 text-xs text-gray-400">日報の入力欄の見出しになります</p>
+                    <p className="mt-1 text-xs text-[var(--text-muted)]">日報の入力欄の見出しになります</p>
                   </div>
 
                   <div>
@@ -230,7 +230,7 @@ export function TemplateEditor({
                       }
                       placeholder="例: 今日完了したタスクを箇条書きで記入"
                     />
-                    <p className="mt-1 text-xs text-gray-400">社員が日報を書くとき、入力欄にうすく表示される案内文です</p>
+                    <p className="mt-1 text-xs text-[var(--text-muted)]">社員が日報を書くとき、入力欄にうすく表示される案内文です</p>
                   </div>
 
                   <div>
@@ -240,7 +240,7 @@ export function TemplateEditor({
                       onChange={(e) => handleAiHintChange(index, e.target.value)}
                       placeholder="例: 箇条書きで簡潔にまとめる"
                     />
-                    <p className="mt-1 text-xs text-gray-400">AIが日報を生成するとき、このセクションをどう書くかの指示です</p>
+                    <p className="mt-1 text-xs text-[var(--text-muted)]">AIが日報を生成するとき、このセクションをどう書くかの指示です</p>
                   </div>
                 </div>
 
@@ -249,7 +249,7 @@ export function TemplateEditor({
                   type="button"
                   onClick={() => handleDelete(index)}
                   disabled={sections.length <= MIN_SECTIONS}
-                  className="mt-1 rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30"
+                  className="mt-1 rounded p-1.5 text-[var(--text-muted)] transition-colors hover:bg-[var(--danger-bg)] hover:text-[var(--danger)] disabled:cursor-not-allowed disabled:opacity-30"
                   aria-label="セクションを削除"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -272,17 +272,17 @@ export function TemplateEditor({
           </Button>
 
           {sections.length >= MAX_SECTIONS && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-[var(--text-secondary)]">
               セクションは最大{MAX_SECTIONS}個までです。
             </p>
           )}
 
           {/* Actions */}
-          <div className="flex items-center justify-between border-t border-gray-200 pt-4">
+          <div className="flex items-center justify-between border-t border-[var(--border-primary)] pt-4">
             <button
               type="button"
               onClick={handleResetDefault}
-              className="inline-flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-gray-700"
+              className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               デフォルトに戻す

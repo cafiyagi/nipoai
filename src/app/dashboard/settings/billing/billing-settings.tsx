@@ -344,22 +344,22 @@ export function BillingSettings({
       {/* ------------------------------------------------------------------ */}
       <div>
         <div className="mb-6 text-center">
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-[var(--text-primary)]">
             プランを選択
           </h2>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
             チームの規模に合わせて最適なプランをお選びください。
           </p>
 
           {/* Billing interval toggle */}
-          <div className="mt-5 inline-flex items-center rounded-full border border-gray-200 bg-gray-50 p-1">
+          <div className="mt-5 inline-flex items-center rounded-full border border-[var(--border-primary)] bg-[var(--bg-hover)] p-1">
             <button
               type="button"
               onClick={() => setBillingInterval("monthly")}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
                 billingInterval === "monthly"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               月額
@@ -369,12 +369,12 @@ export function BillingSettings({
               onClick={() => setBillingInterval("annual")}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
                 billingInterval === "annual"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               年額
-              <span className="ml-1.5 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+              <span className="ml-1.5 inline-flex items-center rounded-full bg-[var(--success-bg)] px-2 py-0.5 text-xs font-medium text-[var(--success)]">
                 20%OFF
               </span>
             </button>
@@ -394,9 +394,9 @@ export function BillingSettings({
                 key={plan}
                 className={`relative flex flex-col transition-shadow ${
                   isRecommended
-                    ? "border-blue-300 shadow-md ring-1 ring-blue-200"
+                    ? "border-[var(--accent)] shadow-md ring-1 ring-[var(--accent)]"
                     : ""
-                } ${isCurrentPlan ? "border-green-300 bg-green-50/30" : ""}`}
+                } ${isCurrentPlan ? "border-[var(--success)] bg-[var(--success-bg)]" : ""}`}
               >
                 {/* Recommended badge */}
                 {isRecommended && (
@@ -413,19 +413,19 @@ export function BillingSettings({
                     <div
                       className={`flex h-8 w-8 items-center justify-center rounded-lg ${
                         isRecommended
-                          ? "bg-blue-100"
+                          ? "bg-[var(--accent-bg)]"
                           : plan === "team"
-                          ? "bg-purple-100"
-                          : "bg-gray-100"
+                          ? "bg-purple-500/10"
+                          : "bg-[var(--bg-hover)]"
                       }`}
                     >
                       <PlanIcon
                         className={`h-4 w-4 ${
                           isRecommended
-                            ? "text-blue-600"
+                            ? "text-[var(--accent)]"
                             : plan === "team"
-                            ? "text-purple-600"
-                            : "text-gray-600"
+                            ? "text-purple-400"
+                            : "text-[var(--text-secondary)]"
                         }`}
                       />
                     </div>
@@ -447,25 +447,25 @@ export function BillingSettings({
                   {/* Price */}
                   <div className="mt-4">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold text-gray-900">
+                      <span className="text-3xl font-bold text-[var(--text-primary)]">
                         {formatPrice(price)}
                       </span>
                       {price > 0 && (
-                        <span className="text-sm text-gray-500">/ 月</span>
+                        <span className="text-sm text-[var(--text-secondary)]">/ 月</span>
                       )}
                     </div>
                     {price > 0 && billingInterval === "annual" && (
-                      <p className="mt-1 text-xs text-gray-400">
+                      <p className="mt-1 text-xs text-[var(--text-muted)]">
                         <span className="line-through">
                           {formatPrice(PLAN_PRICES_MONTHLY[plan])}
                         </span>
-                        <span className="ml-1 text-green-600 font-medium">
+                        <span className="ml-1 text-[var(--success)] font-medium">
                           年額{formatPrice(price * 12)}/年で20%お得
                         </span>
                       </p>
                     )}
                     {price === 0 && (
-                      <p className="mt-1 text-xs text-gray-400">
+                      <p className="mt-1 text-xs text-[var(--text-muted)]">
                         クレジットカード不要
                       </p>
                     )}
@@ -480,13 +480,13 @@ export function BillingSettings({
                         <Check
                           className={`mt-0.5 h-4 w-4 flex-shrink-0 ${
                             isRecommended
-                              ? "text-blue-500"
+                              ? "text-[var(--accent)]"
                               : plan === "team"
-                              ? "text-purple-500"
-                              : "text-gray-400"
+                              ? "text-purple-400"
+                              : "text-[var(--text-muted)]"
                           }`}
                         />
-                        <span className="text-sm text-gray-600">{feature}</span>
+                        <span className="text-sm text-[var(--text-secondary)]">{feature}</span>
                       </li>
                     ))}
                   </ul>
@@ -497,7 +497,7 @@ export function BillingSettings({
                       <Button
                         variant="outline"
                         size="md"
-                        className="w-full cursor-default border-green-300 bg-green-50 text-green-700 hover:bg-green-50"
+                        className="w-full cursor-default border-[var(--success)] bg-[var(--success-bg)] text-[var(--success)] hover:bg-[var(--success-bg)]"
                         disabled
                       >
                         <Check className="mr-1.5 h-4 w-4" />
@@ -542,7 +542,7 @@ export function BillingSettings({
 
         {/* Social proof */}
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-[var(--text-muted)]">
             チームの規模に合わせて最適なプランをお選びください
           </p>
         </div>
@@ -562,8 +562,8 @@ export function BillingSettings({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="py-3 pr-4 text-left font-medium text-gray-500">
+                <tr className="border-b border-[var(--border-primary)]">
+                  <th className="py-3 pr-4 text-left font-medium text-[var(--text-secondary)]">
                     機能
                   </th>
                   {PLAN_ORDER.map((plan) => (
@@ -571,10 +571,10 @@ export function BillingSettings({
                       key={plan}
                       className={`px-4 py-3 text-center font-semibold ${
                         plan === "starter"
-                          ? "text-blue-600"
+                          ? "text-[var(--accent)]"
                           : plan === "team"
-                          ? "text-purple-600"
-                          : "text-gray-900"
+                          ? "text-purple-400"
+                          : "text-[var(--text-primary)]"
                       }`}
                     >
                       <div className="flex flex-col items-center gap-1">
@@ -594,10 +594,10 @@ export function BillingSettings({
                   <tr
                     key={feature.label}
                     className={
-                      idx % 2 === 0 ? "bg-gray-50/50" : "bg-white"
+                      idx % 2 === 0 ? "bg-[var(--bg-hover)]/50" : "bg-[var(--bg-card)]"
                     }
                   >
-                    <td className="py-3 pr-4 text-gray-700 font-medium">
+                    <td className="py-3 pr-4 text-[var(--text-primary)] font-medium">
                       {feature.label}
                     </td>
                     {(["free", "starter", "team"] as const).map((plan) => {
@@ -606,12 +606,12 @@ export function BillingSettings({
                         <td key={plan} className="px-4 py-3 text-center">
                           {typeof val === "boolean" ? (
                             val ? (
-                              <Check className="mx-auto h-4 w-4 text-green-500" />
+                              <Check className="mx-auto h-4 w-4 text-[var(--success)]" />
                             ) : (
-                              <X className="mx-auto h-4 w-4 text-gray-300" />
+                              <X className="mx-auto h-4 w-4 text-[var(--text-muted)]" />
                             )
                           ) : (
-                            <span className="text-gray-600">{val}</span>
+                            <span className="text-[var(--text-secondary)]">{val}</span>
                           )}
                         </td>
                       );
@@ -635,28 +635,28 @@ export function BillingSettings({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-[var(--border-primary)]">
             {FAQ_ITEMS.map((item, idx) => (
               <div key={idx}>
                 <button
                   type="button"
-                  className="flex w-full items-center justify-between py-4 text-left transition-colors hover:text-blue-600"
+                  className="flex w-full items-center justify-between py-4 text-left transition-colors hover:text-[var(--accent)]"
                   onClick={() =>
                     setExpandedFaq(expandedFaq === idx ? null : idx)
                   }
                   aria-expanded={expandedFaq === idx}
                 >
-                  <span className="pr-4 text-sm font-medium text-gray-900">
+                  <span className="pr-4 text-sm font-medium text-[var(--text-primary)]">
                     {item.question}
                   </span>
                   {expandedFaq === idx ? (
-                    <ChevronUp className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                    <ChevronUp className="h-4 w-4 flex-shrink-0 text-[var(--text-muted)]" />
                   ) : (
-                    <ChevronDown className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                    <ChevronDown className="h-4 w-4 flex-shrink-0 text-[var(--text-muted)]" />
                   )}
                 </button>
                 {expandedFaq === idx && (
-                  <p className="pb-4 text-sm leading-relaxed text-gray-500">
+                  <p className="pb-4 text-sm leading-relaxed text-[var(--text-secondary)]">
                     {item.answer}
                   </p>
                 )}
