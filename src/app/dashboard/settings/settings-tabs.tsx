@@ -69,8 +69,8 @@ const categories: CategoryItem[] = [
     label: "一般設定",
     description: "ワークスペース名の変更",
     icon: Settings,
-    iconBg: "bg-gray-100 text-gray-500",
-    iconHoverBg: "group-hover:bg-blue-50 group-hover:text-blue-600",
+    iconBg: "bg-[var(--icon-bg-gray)] text-[var(--icon-text-gray)]",
+    iconHoverBg: "group-hover:bg-[var(--accent-bg)] group-hover:text-[var(--accent)]",
     adminOnly: false,
   },
   {
@@ -78,8 +78,8 @@ const categories: CategoryItem[] = [
     label: "プランと請求",
     description: "プランの管理、利用状況の確認",
     icon: CreditCard,
-    iconBg: "bg-gray-100 text-gray-500",
-    iconHoverBg: "group-hover:bg-blue-50 group-hover:text-blue-600",
+    iconBg: "bg-[var(--icon-bg-gray)] text-[var(--icon-text-gray)]",
+    iconHoverBg: "group-hover:bg-[var(--accent-bg)] group-hover:text-[var(--accent)]",
     adminOnly: false,
   },
   {
@@ -87,8 +87,8 @@ const categories: CategoryItem[] = [
     label: "Slack連携",
     description: "Slackワークスペースとの連携管理",
     icon: MessageSquare,
-    iconBg: "bg-gray-100 text-gray-500",
-    iconHoverBg: "group-hover:bg-blue-50 group-hover:text-blue-600",
+    iconBg: "bg-[var(--icon-bg-gray)] text-[var(--icon-text-gray)]",
+    iconHoverBg: "group-hover:bg-[var(--accent-bg)] group-hover:text-[var(--accent)]",
     adminOnly: false,
   },
   {
@@ -96,8 +96,8 @@ const categories: CategoryItem[] = [
     label: "日報テンプレート",
     description: "日報のセクション構成をカスタマイズ",
     icon: FileText,
-    iconBg: "bg-gray-100 text-gray-500",
-    iconHoverBg: "group-hover:bg-blue-50 group-hover:text-blue-600",
+    iconBg: "bg-[var(--icon-bg-gray)] text-[var(--icon-text-gray)]",
+    iconHoverBg: "group-hover:bg-[var(--accent-bg)] group-hover:text-[var(--accent)]",
     adminOnly: true,
   },
   {
@@ -105,8 +105,8 @@ const categories: CategoryItem[] = [
     label: "アカウント",
     description: "アカウント削除などの操作",
     icon: ShieldAlert,
-    iconBg: "bg-amber-50 text-amber-600",
-    iconHoverBg: "group-hover:bg-amber-100 group-hover:text-amber-700",
+    iconBg: "bg-[var(--icon-bg-amber)] text-[var(--icon-text-amber)]",
+    iconHoverBg: "group-hover:bg-[var(--icon-bg-amber)] group-hover:text-[var(--icon-text-amber)]",
     adminOnly: true,
     separated: true,
   },
@@ -134,7 +134,7 @@ export function SettingsTabs({
   const getBadge = (id: TabId) => {
     switch (id) {
       case "general":
-        return <span className="shrink-0 text-xs text-gray-400">{workspace.name}</span>;
+        return <span className="shrink-0 text-xs text-[var(--text-muted)]">{workspace.name}</span>;
       case "billing":
         return <Badge variant="secondary">{PLAN_LABELS[currentPlan] ?? currentPlan}</Badge>;
       case "slack":
@@ -142,7 +142,7 @@ export function SettingsTabs({
           ? <Badge variant="success">連携済み</Badge>
           : <Badge variant="secondary">未連携</Badge>;
       case "template":
-        return <span className="shrink-0 text-xs text-gray-400">{template.length}セクション</span>;
+        return <span className="shrink-0 text-xs text-[var(--text-muted)]">{template.length}セクション</span>;
       default:
         return null;
     }
@@ -158,17 +158,17 @@ export function SettingsTabs({
             <button
               key={cat.id}
               onClick={() => setActiveTab(cat.id)}
-              className={`group flex w-full items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 text-left transition-colors hover:border-gray-300 hover:bg-gray-50 ${cat.separated ? "mt-6" : ""}`}
+              className={`group flex w-full items-center gap-4 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-card)] p-4 text-left transition-colors hover:border-[var(--border-secondary)] hover:bg-[var(--bg-hover)] ${cat.separated ? "mt-6" : ""}`}
             >
               <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors ${cat.iconBg} ${cat.iconHoverBg}`}>
                 <cat.icon className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-900">{cat.label}</p>
-                <p className="mt-0.5 text-sm text-gray-500">{cat.description}</p>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{cat.label}</p>
+                <p className="mt-0.5 text-sm text-[var(--text-secondary)]">{cat.description}</p>
               </div>
               {getBadge(cat.id)}
-              <svg className="h-5 w-5 shrink-0 text-gray-300 transition-colors group-hover:text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <svg className="h-5 w-5 shrink-0 text-[var(--text-muted)] transition-colors group-hover:text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
               </svg>
             </button>
@@ -184,14 +184,14 @@ export function SettingsTabs({
     <div>
       <button
         onClick={() => setActiveTab("hub")}
-        className="mb-6 inline-flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-gray-700"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
       >
         <ArrowLeft className="h-4 w-4" />
         設定に戻る
       </button>
 
       {activeCategory && (
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">
+        <h2 className="mb-4 text-lg font-semibold text-[var(--text-primary)]">
           {activeCategory.label}
         </h2>
       )}

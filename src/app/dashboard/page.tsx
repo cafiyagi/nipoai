@@ -154,10 +154,10 @@ export default async function DashboardPage() {
       <div className="p-6">
         {/* Greeting */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-[var(--text-primary)]">
             {getGreeting()}、{profileName}さん
           </h2>
-          <p className="mt-1 text-gray-500">
+          <p className="mt-1 text-[var(--text-secondary)]">
             {format(today, "yyyy年M月d日（E）", { locale: ja })}
           </p>
         </div>
@@ -179,22 +179,22 @@ export default async function DashboardPage() {
             href="/dashboard/settings?tab=slack"
             className="group block"
           >
-            <Card className="transition-colors group-hover:border-gray-300">
+            <Card className="transition-colors group-hover:border-[var(--border-secondary)]">
               <div className="flex items-center gap-3 p-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-50">
-                  <MessageSquare className="h-5 w-5 text-purple-600" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--icon-bg-purple)]">
+                  <MessageSquare className="h-5 w-5 text-[var(--icon-text-purple)]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-[var(--text-primary)]">
                     Slack連携
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-[var(--text-secondary)]">
                     {slackConnected
                       ? `${slackChannelCount}チャンネル接続中`
                       : "未連携"}
                   </p>
                 </div>
-                <ArrowRight className="h-4 w-4 shrink-0 text-gray-300 transition-colors group-hover:text-gray-500" />
+                <ArrowRight className="h-4 w-4 shrink-0 text-[var(--text-muted)] transition-colors group-hover:text-[var(--text-secondary)]" />
               </div>
             </Card>
           </Link>
@@ -204,22 +204,22 @@ export default async function DashboardPage() {
             href="/dashboard/team"
             className="group block"
           >
-            <Card className="transition-colors group-hover:border-gray-300">
+            <Card className="transition-colors group-hover:border-[var(--border-secondary)]">
               <div className="flex items-center gap-3 p-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-50">
-                  <Users className="h-5 w-5 text-green-600" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--icon-bg-green)]">
+                  <Users className="h-5 w-5 text-[var(--icon-text-green)]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-[var(--text-primary)]">
                     チーム
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-[var(--text-secondary)]">
                     {memberCount > 0
                       ? `${memberCount}人のメンバー`
                       : "メンバーなし"}
                   </p>
                 </div>
-                <ArrowRight className="h-4 w-4 shrink-0 text-gray-300 transition-colors group-hover:text-gray-500" />
+                <ArrowRight className="h-4 w-4 shrink-0 text-[var(--text-muted)] transition-colors group-hover:text-[var(--text-secondary)]" />
               </div>
             </Card>
           </Link>
