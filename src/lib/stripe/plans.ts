@@ -27,7 +27,7 @@ export const STRIPE_PLANS: Record<Plan, StripePlanConfig> = {
   starter: {
     plan: "starter",
     name: "Starter",
-    priceMonthly: 1980,
+    priceMonthly: 550,
     stripePriceId: process.env.STRIPE_PRICE_STARTER ?? "price_starter_placeholder",
     limits: {
       maxMembers: 10,
@@ -38,7 +38,7 @@ export const STRIPE_PLANS: Record<Plan, StripePlanConfig> = {
   team: {
     plan: "team",
     name: "Team",
-    priceMonthly: 4980,
+    priceMonthly: 1250,
     stripePriceId: process.env.STRIPE_PRICE_TEAM ?? "price_team_placeholder",
     limits: {
       maxMembers: Infinity,

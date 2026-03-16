@@ -52,14 +52,14 @@ const PLAN_ICONS: Record<Plan, typeof Zap> = {
 
 const PLAN_PRICES_MONTHLY: Record<Plan, number> = {
   free: 0,
-  starter: 1980,
-  team: 4980,
+  starter: 550,
+  team: 1250,
 };
 
 const PLAN_PRICES_ANNUAL: Record<Plan, number> = {
   free: 0,
-  starter: 1580,
-  team: 3980,
+  starter: 440,
+  team: 1000,
 };
 
 const PLAN_MEMBER_LIMITS: Record<Plan, number> = {
@@ -543,7 +543,7 @@ export function BillingSettings({
         {/* Social proof */}
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-400">
-            500社以上のチームがNipoAIで日報業務を効率化しています
+            チームの規模に合わせて最適なプランをお選びください
           </p>
         </div>
       </div>
@@ -681,10 +681,10 @@ export function BillingSettings({
                 まだFreeプランをお使いですか？
               </h3>
               <p className="mt-1 text-sm text-blue-100">
-                Standardプランなら無制限の日報生成、週報対応、Slack連携が月額¥1,980で使えます。
+                Standardプランなら無制限の日報生成、週報対応、Slack連携が月額¥550で使えます。
                 {billingInterval === "annual" && (
                   <span className="font-medium text-white">
-                    {" "}年額なら月¥1,580 -- 20%もお得です。
+                    {" "}年額なら月¥440 -- 20%もお得です。
                   </span>
                 )}
               </p>

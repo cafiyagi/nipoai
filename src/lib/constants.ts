@@ -52,7 +52,7 @@ export const PLANS: Record<Plan, PlanDefinition> = {
   starter: {
     id: "starter",
     name: "Starter",
-    price: 1980,
+    price: 550,
     features: [
       "メンバー10名まで",
       "直近90日分のレポート保存",
@@ -72,7 +72,7 @@ export const PLANS: Record<Plan, PlanDefinition> = {
   team: {
     id: "team",
     name: "Team",
-    price: 4980,
+    price: 1250,
     features: [
       "メンバー無制限",
       "無制限のレポート保存",
