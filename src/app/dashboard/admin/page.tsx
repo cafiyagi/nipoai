@@ -1,10 +1,16 @@
 import { redirect } from "next/navigation";
+import {
+  Eye,
+  MousePointerClick,
+  LogOut as LogOutIcon,
+  Globe,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Header } from "@/components/layout/header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { format, startOfDay, subDays } from "date-fns";
 import { ja } from "date-fns/locale";
 
 const SUPER_ADMIN_EMAILS = ["cafiyagi@gmail.com"];
@@ -56,6 +62,121 @@ interface ReportRow {
   created_at: string;
 }
 
+interface PageViewRow {
+  session_id: string;
+  path: string;
+  created_at: string;
+}
+
+// ---------------------------------------------------------------------------
+// Analytics helpers
+// ---------------------------------------------------------------------------
+
+function computeAnalytics(views: PageViewRow[]) {
+  const now = new Date();
+  const todayStart = startOfDay(now).toISOString();
+
+  // Today's views
+  const todayViews = views.filter((v) => v.created_at >= todayStart);
+  const todayUniqueSessions = new Set(todayViews.map((v) => v.session_id)).size;
+  const todayPageViews = todayViews.length;
+
+  // Total unique sessions (all time)
+  const totalUniqueSessions = new Set(views.map((v) => v.session_id)).size;
+  const totalPageViews = views.length;
+
+  // Bounce rate: sessions that only visited 1 page
+  const sessionPages = new Map<string, Set<string>>();
+  for (const v of views) {
+    if (!sessionPages.has(v.session_id)) {
+      sessionPages.set(v.session_id, new Set());
+    }
+    sessionPages.get(v.session_id)!.add(v.path);
+  }
+  const totalSessions = sessionPages.size;
+  const bouncedSessions = [...sessionPages.values()].filter(
+    (pages) => pages.size === 1,
+  ).length;
+  const bounceRate =
+    totalSessions > 0 ? Math.round((bouncedSessions / totalSessions) * 100) : 0;
+
+  // Today's bounce
+  const todaySessionPages = new Map<string, Set<string>>();
+  for (const v of todayViews) {
+    if (!todaySessionPages.has(v.session_id)) {
+      todaySessionPages.set(v.session_id, new Set());
+    }
+    todaySessionPages.get(v.session_id)!.add(v.path);
+  }
+  const todayTotalSessions = todaySessionPages.size;
+  const todayBounced = [...todaySessionPages.values()].filter(
+    (pages) => pages.size === 1,
+  ).length;
+  const todayBounceRate =
+    todayTotalSessions > 0
+      ? Math.round((todayBounced / todayTotalSessions) * 100)
+      : 0;
+
+  // Funnel: LP → signup → dashboard
+  const funnelLP = new Set(
+    views.filter((v) => v.path === "/").map((v) => v.session_id),
+  ).size;
+  const funnelSignup = new Set(
+    views.filter((v) => v.path === "/signup").map((v) => v.session_id),
+  ).size;
+  const funnelLogin = new Set(
+    views.filter((v) => v.path === "/login").map((v) => v.session_id),
+  ).size;
+  const funnelDashboard = new Set(
+    views
+      .filter((v) => v.path.startsWith("/dashboard"))
+      .map((v) => v.session_id),
+  ).size;
+
+  // Top pages today
+  const todayPageCounts = new Map<string, number>();
+  for (const v of todayViews) {
+    todayPageCounts.set(v.path, (todayPageCounts.get(v.path) ?? 0) + 1);
+  }
+  const topPages = [...todayPageCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8);
+
+  // Daily visitors (last 7 days)
+  const dailyVisitors: { date: string; visitors: number; views: number }[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const day = subDays(now, i);
+    const dayStr = format(day, "yyyy-MM-dd");
+    const dayLabel = format(day, "M/d（E）", { locale: ja });
+    const dayViews = views.filter((v) => v.created_at.startsWith(dayStr));
+    const dayUnique = new Set(dayViews.map((v) => v.session_id)).size;
+    dailyVisitors.push({
+      date: dayLabel,
+      visitors: dayUnique,
+      views: dayViews.length,
+    });
+  }
+
+  return {
+    todayUniqueSessions,
+    todayPageViews,
+    todayBounceRate,
+    todayBounced,
+    todayTotalSessions,
+    totalUniqueSessions,
+    totalPageViews,
+    bounceRate,
+    bouncedSessions,
+    totalSessions,
+    funnelLP,
+    funnelSignup,
+    funnelLogin,
+    funnelDashboard,
+    topPages,
+    dailyVisitors,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
@@ -78,6 +199,7 @@ export default async function AdminPage() {
     slackResult,
     membershipsResult,
     reportsResult,
+    pageViewsResult,
   ] = await Promise.all([
     admin
       .from("profiles")
@@ -102,6 +224,12 @@ export default async function AdminPage() {
       .select("id, workspace_id, user_id, report_date, status, created_at")
       .order("created_at", { ascending: false })
       .limit(50),
+    (admin as unknown as { from: (table: string) => { select: (cols: string) => { gte: (col: string, val: string) => { order: (col: string, opts: { ascending: boolean }) => { limit: (n: number) => Promise<{ data: PageViewRow[] | null }> } } } } })
+      .from("page_views")
+      .select("session_id, path, created_at")
+      .gte("created_at", subDays(new Date(), 30).toISOString())
+      .order("created_at", { ascending: false })
+      .limit(10000),
   ]);
 
   const profiles = (profilesResult.data ?? []) as ProfileRow[];
@@ -109,11 +237,14 @@ export default async function AdminPage() {
   const slackIntegrations = (slackResult.data ?? []) as SlackRow[];
   const memberships = (membershipsResult.data ?? []) as MembershipRow[];
   const recentReports = (reportsResult.data ?? []) as ReportRow[];
+  const pageViews = (pageViewsResult.data ?? []) as PageViewRow[];
 
   // Build lookup maps
   const workspaceMap = new Map(workspaces.map((w) => [w.id, w]));
   const profileMap = new Map(profiles.map((p) => [p.id, p]));
-  const slackByWorkspace = new Map(slackIntegrations.map((s) => [s.workspace_id, s]));
+  const slackByWorkspace = new Map(
+    slackIntegrations.map((s) => [s.workspace_id, s]),
+  );
 
   // Stats
   const totalUsers = profiles.length;
@@ -121,7 +252,7 @@ export default async function AdminPage() {
   const totalSlack = slackIntegrations.length;
   const totalReports = recentReports.length;
 
-  // Users with Slack: find users whose workspace has slack
+  // Users with Slack
   const usersWithSlack = new Set<string>();
   for (const m of memberships) {
     if (slackByWorkspace.has(m.workspace_id)) {
@@ -132,6 +263,9 @@ export default async function AdminPage() {
   // Today's signups
   const today = format(new Date(), "yyyy-MM-dd");
   const todaySignups = profiles.filter((p) => p.created_at.startsWith(today));
+
+  // Analytics
+  const analytics = computeAnalytics(pageViews);
 
   function formatDate(dateStr: string) {
     try {
@@ -181,10 +315,170 @@ export default async function AdminPage() {
       <div className="p-6 space-y-6">
         {/* Summary cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <SummaryCard label="総ユーザー数" value={totalUsers} sub={`今日 +${todaySignups.length}`} color="blue" />
-          <SummaryCard label="ワークスペース" value={totalWorkspaces} color="purple" />
-          <SummaryCard label="Slack連携済み" value={totalSlack} sub={`${usersWithSlack.size}人が利用`} color="green" />
-          <SummaryCard label="直近の日報" value={totalReports} sub="最大50件表示" color="amber" />
+          <SummaryCard
+            label="総ユーザー数"
+            value={totalUsers}
+            sub={`今日 +${todaySignups.length}`}
+            color="blue"
+          />
+          <SummaryCard
+            label="ワークスペース"
+            value={totalWorkspaces}
+            color="purple"
+          />
+          <SummaryCard
+            label="Slack連携済み"
+            value={totalSlack}
+            sub={`${usersWithSlack.size}人が利用`}
+            color="green"
+          />
+          <SummaryCard
+            label="直近の日報"
+            value={totalReports}
+            sub="最大50件表示"
+            color="amber"
+          />
+        </div>
+
+        {/* ================================================================= */}
+        {/* Analytics Section                                                 */}
+        {/* ================================================================= */}
+
+        {/* Analytics summary cards */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <AnalyticsCard
+            icon={<Eye className="h-4 w-4" />}
+            label="今日の訪問者"
+            value={analytics.todayUniqueSessions}
+            sub={`${analytics.todayPageViews} PV`}
+          />
+          <AnalyticsCard
+            icon={<Globe className="h-4 w-4" />}
+            label="累計訪問者"
+            value={analytics.totalUniqueSessions}
+            sub={`${analytics.totalPageViews} PV（30日間）`}
+          />
+          <AnalyticsCard
+            icon={<LogOutIcon className="h-4 w-4" />}
+            label="今日の直帰率"
+            value={`${analytics.todayBounceRate}%`}
+            sub={`${analytics.todayBounced}/${analytics.todayTotalSessions}人が離脱`}
+          />
+          <AnalyticsCard
+            icon={<MousePointerClick className="h-4 w-4" />}
+            label="全体の直帰率"
+            value={`${analytics.bounceRate}%`}
+            sub={`${analytics.bouncedSessions}/${analytics.totalSessions}セッション`}
+          />
+        </div>
+
+        {/* Funnel + Top Pages + Daily Visitors */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          {/* Funnel */}
+          <Card>
+            <CardHeader>
+              <CardTitle>ファネル分析（30日間）</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <FunnelStep
+                  label="LP（/）"
+                  value={analytics.funnelLP}
+                  max={analytics.funnelLP}
+                />
+                <FunnelStep
+                  label="サインアップ"
+                  value={analytics.funnelSignup}
+                  max={analytics.funnelLP}
+                />
+                <FunnelStep
+                  label="ログイン"
+                  value={analytics.funnelLogin}
+                  max={analytics.funnelLP}
+                />
+                <FunnelStep
+                  label="ダッシュボード"
+                  value={analytics.funnelDashboard}
+                  max={analytics.funnelLP}
+                />
+              </div>
+              {analytics.funnelLP > 0 && (
+                <p className="mt-4 text-xs text-[var(--text-muted)]">
+                  LP → サインアップ転換率:{" "}
+                  <span className="font-semibold text-[var(--accent)]">
+                    {Math.round(
+                      (analytics.funnelSignup / analytics.funnelLP) * 100,
+                    )}
+                    %
+                  </span>
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Top Pages Today */}
+          <Card>
+            <CardHeader>
+              <CardTitle>今日のページ別PV</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {analytics.topPages.length === 0 ? (
+                <p className="text-sm text-[var(--text-muted)]">
+                  まだデータがありません
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {analytics.topPages.map(([path, count]) => (
+                    <div
+                      key={path}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <span className="truncate text-[var(--text-secondary)]">
+                        {path}
+                      </span>
+                      <span className="ml-2 shrink-0 font-medium text-[var(--text-primary)]">
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Daily Visitors (7 days) */}
+          <Card>
+            <CardHeader>
+              <CardTitle>日別訪問者数（7日間）</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {analytics.dailyVisitors.map((day) => {
+                  const max = Math.max(
+                    ...analytics.dailyVisitors.map((d) => d.visitors),
+                    1,
+                  );
+                  const pct = Math.round((day.visitors / max) * 100);
+                  return (
+                    <div key={day.date} className="flex items-center gap-3">
+                      <span className="w-24 shrink-0 text-xs text-[var(--text-muted)]">
+                        {day.date}
+                      </span>
+                      <div className="flex-1">
+                        <div
+                          className="h-5 rounded bg-[var(--accent)] transition-all"
+                          style={{ width: `${Math.max(pct, 2)}%` }}
+                        />
+                      </div>
+                      <span className="w-12 shrink-0 text-right text-xs font-medium text-[var(--text-primary)]">
+                        {day.visitors}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Users table */}
@@ -215,11 +509,16 @@ export default async function AdminPage() {
                     const hasSlack = usersWithSlack.has(profile.id);
 
                     return (
-                      <tr key={profile.id} className="border-b last:border-0">
+                      <tr
+                        key={profile.id}
+                        className="border-b last:border-0"
+                      >
                         <td className="py-3 pr-4">
                           <div className="flex items-center gap-2">
                             <div className="h-8 w-8 rounded-full bg-[var(--bg-hover)] flex items-center justify-center text-xs font-medium text-[var(--text-secondary)]">
-                              {(profile.display_name || profile.email)[0]?.toUpperCase()}
+                              {(
+                                profile.display_name || profile.email
+                              )[0]?.toUpperCase()}
                             </div>
                             <span className="font-medium text-[var(--text-primary)]">
                               {profile.display_name || "-"}
@@ -231,9 +530,17 @@ export default async function AdminPage() {
                         </td>
                         <td className="py-3 pr-4">
                           {userWorkspaces.map((ws) => (
-                            <div key={ws.id} className="flex items-center gap-1.5">
-                              <span className="text-[var(--text-primary)]">{ws.name}</span>
-                              <Badge variant={planVariant(ws.plan)} className="text-[10px]">
+                            <div
+                              key={ws.id}
+                              className="flex items-center gap-1.5"
+                            >
+                              <span className="text-[var(--text-primary)]">
+                                {ws.name}
+                              </span>
+                              <Badge
+                                variant={planVariant(ws.plan)}
+                                className="text-[10px]"
+                              >
                                 {ws.plan}
                               </Badge>
                             </div>
@@ -268,7 +575,9 @@ export default async function AdminPage() {
           </CardHeader>
           <CardContent>
             {slackIntegrations.length === 0 ? (
-              <p className="text-sm text-[var(--text-secondary)]">まだSlack連携はありません</p>
+              <p className="text-sm text-[var(--text-secondary)]">
+                まだSlack連携はありません
+              </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -287,10 +596,14 @@ export default async function AdminPage() {
                       const installer = slack.installed_by
                         ? profileMap.get(slack.installed_by)
                         : null;
-                      const channelCount = slack.selected_channel_ids?.length ?? 0;
+                      const channelCount =
+                        slack.selected_channel_ids?.length ?? 0;
 
                       return (
-                        <tr key={slack.id} className="border-b last:border-0">
+                        <tr
+                          key={slack.id}
+                          className="border-b last:border-0"
+                        >
                           <td className="py-3 pr-4 font-medium text-[var(--text-primary)]">
                             {slack.slack_team_name || slack.slack_team_id}
                           </td>
@@ -298,12 +611,18 @@ export default async function AdminPage() {
                             {ws?.name ?? "-"}
                           </td>
                           <td className="py-3 pr-4">
-                            <Badge variant={channelCount > 0 ? "success" : "secondary"}>
+                            <Badge
+                              variant={
+                                channelCount > 0 ? "success" : "secondary"
+                              }
+                            >
                               {channelCount}ch
                             </Badge>
                           </td>
                           <td className="py-3 pr-4 text-[var(--text-secondary)]">
-                            {installer?.display_name || installer?.email || "-"}
+                            {installer?.display_name ||
+                              installer?.email ||
+                              "-"}
                           </td>
                           <td className="py-3 text-[var(--text-secondary)]">
                             {formatFullDate(slack.created_at)}
@@ -325,7 +644,9 @@ export default async function AdminPage() {
           </CardHeader>
           <CardContent>
             {recentReports.length === 0 ? (
-              <p className="text-sm text-[var(--text-secondary)]">まだ日報はありません</p>
+              <p className="text-sm text-[var(--text-secondary)]">
+                まだ日報はありません
+              </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -344,9 +665,14 @@ export default async function AdminPage() {
                       const ws = workspaceMap.get(report.workspace_id);
 
                       return (
-                        <tr key={report.id} className="border-b last:border-0">
+                        <tr
+                          key={report.id}
+                          className="border-b last:border-0"
+                        >
                           <td className="py-3 pr-4 font-medium text-[var(--text-primary)]">
-                            {reportUser?.display_name || reportUser?.email || "-"}
+                            {reportUser?.display_name ||
+                              reportUser?.email ||
+                              "-"}
                           </td>
                           <td className="py-3 pr-4 text-[var(--text-secondary)]">
                             {ws?.name ?? "-"}
@@ -402,11 +728,86 @@ function SummaryCard({
     <Card>
       <div className="p-5">
         <p className="text-sm text-[var(--text-secondary)]">{label}</p>
-        <p className={`mt-1 text-3xl font-bold ${colorMap[color].split(" ")[1]}`}>
+        <p
+          className={`mt-1 text-3xl font-bold ${colorMap[color].split(" ")[1]}`}
+        >
           {value}
         </p>
-        {sub && <p className="mt-1 text-xs text-[var(--text-muted)]">{sub}</p>}
+        {sub && (
+          <p className="mt-1 text-xs text-[var(--text-muted)]">{sub}</p>
+        )}
       </div>
     </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Analytics card component
+// ---------------------------------------------------------------------------
+
+function AnalyticsCard({
+  icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number | string;
+  sub?: string;
+}) {
+  return (
+    <Card>
+      <div className="p-5">
+        <div className="flex items-center gap-2 text-[var(--text-muted)]">
+          {icon}
+          <p className="text-sm">{label}</p>
+        </div>
+        <p className="mt-2 text-3xl font-bold text-[var(--text-primary)]">
+          {value}
+        </p>
+        {sub && (
+          <p className="mt-1 text-xs text-[var(--text-muted)]">{sub}</p>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Funnel step component
+// ---------------------------------------------------------------------------
+
+function FunnelStep({
+  label,
+  value,
+  max,
+}: {
+  label: string;
+  value: number;
+  max: number;
+}) {
+  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between text-sm">
+        <span className="text-[var(--text-secondary)]">{label}</span>
+        <span className="font-medium text-[var(--text-primary)]">
+          {value}人
+          {max > 0 && value < max && (
+            <span className="ml-1 text-xs text-[var(--text-muted)]">
+              ({pct}%)
+            </span>
+          )}
+        </span>
+      </div>
+      <div className="h-2 w-full rounded-full bg-[var(--bg-hover)]">
+        <div
+          className="h-2 rounded-full bg-[var(--accent)] transition-all"
+          style={{ width: `${Math.max(pct, 2)}%` }}
+        />
+      </div>
+    </div>
   );
 }
