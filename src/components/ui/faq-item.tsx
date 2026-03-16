@@ -20,11 +20,11 @@ export function FaqItem({
         onClick={() => setOpen(!open)}
         aria-expanded={open}
       >
-        <span className="text-sm font-semibold text-gray-900 sm:text-base">
+        <span className="text-sm font-semibold text-[var(--text-primary)] sm:text-base">
           {question}
         </span>
         <ChevronDown
-          className={`h-5 w-5 shrink-0 text-gray-400 transition-transform duration-200 ${
+          className={`h-5 w-5 shrink-0 text-[var(--text-muted)] transition-transform duration-200 ${
             open ? "rotate-180" : ""
           }`}
         />
@@ -35,7 +35,7 @@ export function FaqItem({
         }`}
       >
         <div className="overflow-hidden">
-          <p className="text-sm leading-relaxed text-gray-500">{answer}</p>
+          <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{answer}</p>
         </div>
       </div>
     </div>

@@ -196,7 +196,7 @@ export default async function AdminPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b text-left text-gray-500">
+                  <tr className="border-b text-left text-[var(--text-secondary)]">
                     <th className="pb-3 pr-4 font-medium">ユーザー</th>
                     <th className="pb-3 pr-4 font-medium">メール</th>
                     <th className="pb-3 pr-4 font-medium">ワークスペース</th>
@@ -218,28 +218,28 @@ export default async function AdminPage() {
                       <tr key={profile.id} className="border-b last:border-0">
                         <td className="py-3 pr-4">
                           <div className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
+                            <div className="h-8 w-8 rounded-full bg-[var(--bg-hover)] flex items-center justify-center text-xs font-medium text-[var(--text-secondary)]">
                               {(profile.display_name || profile.email)[0]?.toUpperCase()}
                             </div>
-                            <span className="font-medium text-gray-900">
+                            <span className="font-medium text-[var(--text-primary)]">
                               {profile.display_name || "-"}
                             </span>
                           </div>
                         </td>
-                        <td className="py-3 pr-4 text-gray-600">
+                        <td className="py-3 pr-4 text-[var(--text-secondary)]">
                           {profile.email}
                         </td>
                         <td className="py-3 pr-4">
                           {userWorkspaces.map((ws) => (
                             <div key={ws.id} className="flex items-center gap-1.5">
-                              <span className="text-gray-900">{ws.name}</span>
+                              <span className="text-[var(--text-primary)]">{ws.name}</span>
                               <Badge variant={planVariant(ws.plan)} className="text-[10px]">
                                 {ws.plan}
                               </Badge>
                             </div>
                           ))}
                           {userWorkspaces.length === 0 && (
-                            <span className="text-gray-400">-</span>
+                            <span className="text-[var(--text-muted)]">-</span>
                           )}
                         </td>
                         <td className="py-3 pr-4">
@@ -249,7 +249,7 @@ export default async function AdminPage() {
                             <Badge variant="secondary">未連携</Badge>
                           )}
                         </td>
-                        <td className="py-3 text-gray-500">
+                        <td className="py-3 text-[var(--text-secondary)]">
                           {formatFullDate(profile.created_at)}
                         </td>
                       </tr>
@@ -268,12 +268,12 @@ export default async function AdminPage() {
           </CardHeader>
           <CardContent>
             {slackIntegrations.length === 0 ? (
-              <p className="text-sm text-gray-500">まだSlack連携はありません</p>
+              <p className="text-sm text-[var(--text-secondary)]">まだSlack連携はありません</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b text-left text-gray-500">
+                    <tr className="border-b text-left text-[var(--text-secondary)]">
                       <th className="pb-3 pr-4 font-medium">Slackチーム</th>
                       <th className="pb-3 pr-4 font-medium">ワークスペース</th>
                       <th className="pb-3 pr-4 font-medium">チャンネル数</th>
@@ -291,10 +291,10 @@ export default async function AdminPage() {
 
                       return (
                         <tr key={slack.id} className="border-b last:border-0">
-                          <td className="py-3 pr-4 font-medium text-gray-900">
+                          <td className="py-3 pr-4 font-medium text-[var(--text-primary)]">
                             {slack.slack_team_name || slack.slack_team_id}
                           </td>
-                          <td className="py-3 pr-4 text-gray-600">
+                          <td className="py-3 pr-4 text-[var(--text-secondary)]">
                             {ws?.name ?? "-"}
                           </td>
                           <td className="py-3 pr-4">
@@ -302,10 +302,10 @@ export default async function AdminPage() {
                               {channelCount}ch
                             </Badge>
                           </td>
-                          <td className="py-3 pr-4 text-gray-600">
+                          <td className="py-3 pr-4 text-[var(--text-secondary)]">
                             {installer?.display_name || installer?.email || "-"}
                           </td>
-                          <td className="py-3 text-gray-500">
+                          <td className="py-3 text-[var(--text-secondary)]">
                             {formatFullDate(slack.created_at)}
                           </td>
                         </tr>
@@ -325,12 +325,12 @@ export default async function AdminPage() {
           </CardHeader>
           <CardContent>
             {recentReports.length === 0 ? (
-              <p className="text-sm text-gray-500">まだ日報はありません</p>
+              <p className="text-sm text-[var(--text-secondary)]">まだ日報はありません</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b text-left text-gray-500">
+                    <tr className="border-b text-left text-[var(--text-secondary)]">
                       <th className="pb-3 pr-4 font-medium">ユーザー</th>
                       <th className="pb-3 pr-4 font-medium">ワークスペース</th>
                       <th className="pb-3 pr-4 font-medium">日付</th>
@@ -345,13 +345,13 @@ export default async function AdminPage() {
 
                       return (
                         <tr key={report.id} className="border-b last:border-0">
-                          <td className="py-3 pr-4 font-medium text-gray-900">
+                          <td className="py-3 pr-4 font-medium text-[var(--text-primary)]">
                             {reportUser?.display_name || reportUser?.email || "-"}
                           </td>
-                          <td className="py-3 pr-4 text-gray-600">
+                          <td className="py-3 pr-4 text-[var(--text-secondary)]">
                             {ws?.name ?? "-"}
                           </td>
-                          <td className="py-3 pr-4 text-gray-900">
+                          <td className="py-3 pr-4 text-[var(--text-primary)]">
                             {report.report_date}
                           </td>
                           <td className="py-3 pr-4">
@@ -359,7 +359,7 @@ export default async function AdminPage() {
                               {report.status}
                             </Badge>
                           </td>
-                          <td className="py-3 text-gray-500">
+                          <td className="py-3 text-[var(--text-secondary)]">
                             {formatDate(report.created_at)}
                           </td>
                         </tr>
@@ -392,20 +392,20 @@ function SummaryCard({
   color: "blue" | "purple" | "green" | "amber";
 }) {
   const colorMap = {
-    blue: "bg-blue-50 text-blue-700",
-    purple: "bg-purple-50 text-purple-700",
-    green: "bg-green-50 text-green-700",
-    amber: "bg-amber-50 text-amber-700",
+    blue: "bg-[var(--accent-bg)] text-[var(--accent)]",
+    purple: "bg-[var(--icon-bg-purple)] text-[var(--icon-text-purple)]",
+    green: "bg-[var(--success-bg)] text-[var(--success)]",
+    amber: "bg-[var(--icon-bg-amber)] text-[var(--icon-text-amber)]",
   };
 
   return (
     <Card>
       <div className="p-5">
-        <p className="text-sm text-gray-500">{label}</p>
+        <p className="text-sm text-[var(--text-secondary)]">{label}</p>
         <p className={`mt-1 text-3xl font-bold ${colorMap[color].split(" ")[1]}`}>
           {value}
         </p>
-        {sub && <p className="mt-1 text-xs text-gray-400">{sub}</p>}
+        {sub && <p className="mt-1 text-xs text-[var(--text-muted)]">{sub}</p>}
       </div>
     </Card>
   );

@@ -104,10 +104,10 @@ export function TodayReportCard({
             <config.Icon className={`h-5 w-5 ${config.iconColor}`} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">
+            <p className="text-sm font-semibold text-[var(--text-primary)]">
               今日の日報
             </p>
-            <p className="mt-0.5 text-sm text-gray-500">
+            <p className="mt-0.5 text-sm text-[var(--text-secondary)]">
               {config.description}
             </p>
           </div>
@@ -165,9 +165,9 @@ export function TodayReportCard({
           {/* Error message */}
           {errorMessage && (
             <div className="flex flex-col items-start gap-1">
-              <p className="text-xs text-red-600">{errorMessage}</p>
-              {(errorCode === "NO_SLACK" || errorCode === "NO_CHANNELS" || errorCode === "FETCH_FAILED") && (
-                <Link href="/dashboard/settings" className="text-xs text-blue-600 hover:underline">
+              <p className="text-xs text-[var(--danger)]">{errorMessage}</p>
+              {(errorCode === "NO_SLACK" || errorCode === "NO_CHANNELS" || errorCode === "FETCH_FAILED" || errorCode === "AUTH_INVALID" || errorCode === "NOT_IN_CHANNEL" || errorCode === "CHANNEL_NOT_FOUND") && (
+                <Link href="/dashboard/settings" className="text-xs text-[var(--accent)] hover:underline">
                   設定画面を開く →
                 </Link>
               )}
@@ -191,39 +191,39 @@ function getStateConfig(
     case "no_slack":
       return {
         Icon: MessageSquare,
-        iconBg: "bg-gray-100",
-        iconColor: "text-gray-400",
+        iconBg: "bg-[var(--icon-bg-gray)]",
+        iconColor: "text-[var(--icon-text-gray)]",
         description:
           "Slackを連携して日報の自動生成を始めましょう",
       };
     case "not_generated":
       return {
         Icon: Sparkles,
-        iconBg: "bg-blue-50",
-        iconColor: "text-blue-600",
+        iconBg: "bg-[var(--accent-bg)]",
+        iconColor: "text-[var(--accent)]",
         description:
           "Slackのメッセージから今日の日報を生成できます",
       };
     case "generating":
       return {
         Icon: Loader2,
-        iconBg: "bg-blue-50",
-        iconColor: "text-blue-600 animate-spin",
+        iconBg: "bg-[var(--accent-bg)]",
+        iconColor: "text-[var(--accent)] animate-spin",
         description: "AIが日報を生成しています...",
       };
     case "draft":
       return {
         Icon: Edit3,
-        iconBg: "bg-amber-50",
-        iconColor: "text-amber-600",
+        iconBg: "bg-[var(--icon-bg-amber)]",
+        iconColor: "text-[var(--icon-text-amber)]",
         description:
           "AIが日報を生成しました。確認して提出してください",
       };
     case "submitted":
       return {
         Icon: CheckCircle,
-        iconBg: "bg-green-50",
-        iconColor: "text-green-600",
+        iconBg: "bg-[var(--success-bg)]",
+        iconColor: "text-[var(--success)]",
         description: "本日の日報は完了しています",
       };
   }

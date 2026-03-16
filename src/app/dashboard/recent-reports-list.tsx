@@ -34,13 +34,13 @@ export function RecentReportsList({ reports: initialReports }: { reports: Report
   if (reports.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-          <FileText className="h-6 w-6 text-gray-400" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--bg-hover)]">
+          <FileText className="h-6 w-6 text-[var(--text-muted)]" />
         </div>
-        <p className="mt-4 text-sm font-medium text-gray-900">
+        <p className="mt-4 text-sm font-medium text-[var(--text-primary)]">
           まだ日報がありません
         </p>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">
           Slackを連携すると、メッセージから自動で日報が生成されます。
         </p>
       </div>
@@ -54,25 +54,25 @@ export function RecentReportsList({ reports: initialReports }: { reports: Report
         return (
           <div
             key={report.id}
-            className="-mx-2 flex items-center gap-4 rounded-lg px-2 py-3 transition-colors hover:bg-gray-50"
+            className="-mx-2 flex items-center gap-4 rounded-lg px-2 py-3 transition-colors hover:bg-[var(--bg-hover)]"
           >
             <Link
               href={`/dashboard/reports/${report.id}`}
               className="flex min-w-0 flex-1 items-center gap-4"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-                <FileText className="h-4 w-4 text-gray-500" />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--bg-hover)]">
+                <FileText className="h-4 w-4 text-[var(--text-secondary)]" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-[var(--text-primary)]">
                   {report.date}
                 </p>
                 {report.summary ? (
-                  <p className="mt-0.5 truncate text-sm text-gray-500">
+                  <p className="mt-0.5 truncate text-sm text-[var(--text-secondary)]">
                     {report.summary}
                   </p>
                 ) : (
-                  <p className="mt-0.5 text-sm italic text-gray-400">
+                  <p className="mt-0.5 text-sm italic text-[var(--text-muted)]">
                     内容なし
                   </p>
                 )}
