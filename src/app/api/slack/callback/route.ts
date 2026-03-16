@@ -123,10 +123,38 @@ export async function GET(request: Request) {
       throw new Error("Failed to save Slack integration");
     }
 
+    // After re-connection: rejoin previously selected channels with the new token
+    try {
+      const { data: rawSaved } = await admin
+        .from("slack_integrations")
+        .select("selected_channel_ids")
+        .eq("workspace_id", stateWorkspaceId)
+        .eq("slack_team_id", teamId)
+        .single();
+
+      const saved = rawSaved as { selected_channel_ids: string[] | null } | null;
+      const channelIds = saved?.selected_channel_ids ?? [];
+
+      if (channelIds.length > 0) {
+        const authedClient = new WebClient(botToken);
+        for (const channelId of channelIds) {
+          try {
+            await authedClient.conversations.join({ channel: channelId });
+          } catch {
+            // Private channels can't be auto-joined — user will need /invite
+          }
+        }
+      }
+    } catch (rejoinError) {
+      // Non-fatal: don't block the OAuth flow
+      console.warn("Failed to rejoin channels after re-connection:", rejoinError);
+    }
+
     const redirectUrl = new URL(
       "/dashboard/settings",
       process.env.NEXT_PUBLIC_APP_URL,
     );
+    redirectUrl.searchParams.set("tab", "slack");
     redirectUrl.searchParams.set("slack_connected", "true");
 
     return NextResponse.redirect(redirectUrl.toString());

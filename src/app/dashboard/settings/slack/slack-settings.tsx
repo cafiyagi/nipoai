@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   MessageSquare,
   CheckCircle,
@@ -43,6 +44,8 @@ export function SlackSettings({
   isAdmin,
 }: SlackSettingsProps) {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [channelDialogOpen, setChannelDialogOpen] = useState(false);
@@ -118,6 +121,22 @@ export function SlackSettings({
       setIsLoadingChannels(false);
     }
   }, [slackIntegration, workspaceId, toast]);
+
+  /* Auto-open channel selection dialog after Slack OAuth completes */
+  useEffect(() => {
+    if (
+      searchParams.get("slack_connected") === "true" &&
+      slackIntegration &&
+      slackIntegration.selected_channel_ids.length === 0 &&
+      isAdmin
+    ) {
+      router.replace("/dashboard/settings?tab=slack", { scroll: false });
+      const timer = setTimeout(() => {
+        handleOpenChannelDialog();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, slackIntegration, isAdmin, router, handleOpenChannelDialog]);
 
   const handleToggleChannel = (channelId: string) => {
     setSelectedChannelIds((prev) => {
