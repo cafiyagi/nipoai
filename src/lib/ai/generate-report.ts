@@ -16,7 +16,9 @@ interface GenerateReportResult {
 function buildSystemPrompt(template: ReportTemplate): string {
   const sectionDescriptions = template
     .map((section) => {
-      const hint = section.ai_hint ? ` — ${section.ai_hint}` : "";
+      const hint = section.ai_hint
+        ? `\n  → AI指示: ${section.ai_hint}`
+        : "";
       return `- ${section.key}: ${section.label}${hint}`;
     })
     .join("\n");
@@ -30,9 +32,11 @@ function buildSystemPrompt(template: ReportTemplate): string {
 Slackメッセージ履歴を分析し、構造化された日報JSONを生成します。
 
 ## 文体ルール（厳守）
-- 元のメッセージの文体・トーンをできるだけ保持すること
+- デフォルトでは元のメッセージの文体・トーンをできるだけ保持すること
 - ため口で書かれたメッセージはため口のまま、丁寧語は丁寧語のまま出力すること
 - AIが勝手に丁寧語や敬語に変換しないこと（例: 「売上28万だった」→「売上は28万でした」に変換しない）
+- ただし、セクション定義のai_hint（指示）で文体が指定されている場合は、その指示を最優先で従うこと
+  （例: ai_hintに「です・ます調で記述」とあれば、元メッセージがため口でも丁寧語に変換する）
 - 主語は省略し、業務内容を簡潔に記述すること
 
 ## 箇条書きフォーマット
