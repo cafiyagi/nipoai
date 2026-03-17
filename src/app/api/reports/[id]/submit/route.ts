@@ -171,7 +171,8 @@ async function deliverToSlack(reportId: string, workspaceId: string, channelId?:
       .update(deliveredUpdate as never)
       .eq("id", reportId);
   } catch (error) {
-    console.error("Slack delivery failed (non-blocking):", error);
+    console.error("deliverToSlack error:", error);
+    throw error;
   }
 }
 
@@ -259,8 +260,25 @@ export async function POST(_request: Request, context: RouteContext) {
       );
     }
 
-    // Deliver to Slack in the background (non-blocking)
-    deliverToSlack(report.id, report.workspace_id, channel_id).catch(() => {});
+    // Deliver to Slack (blocking — so the user sees errors)
+    if (channel_id) {
+      try {
+        await deliverToSlack(report.id, report.workspace_id, channel_id);
+      } catch (deliveryError) {
+        console.error("Slack delivery failed:", deliveryError);
+        // Report is already submitted — don't revert, but tell the user
+        return NextResponse.json({
+          report: updated,
+          warning: "日報は保存されましたが、Slackへの共有に失敗しました。",
+          delivery_error: deliveryError instanceof Error ? deliveryError.message : String(deliveryError),
+        });
+      }
+    } else {
+      // DM delivery — fire-and-forget (legacy)
+      deliverToSlack(report.id, report.workspace_id).catch((err) => {
+        console.error("Slack DM delivery failed:", err);
+      });
+    }
 
     return NextResponse.json({ report: updated });
   } catch (error) {
