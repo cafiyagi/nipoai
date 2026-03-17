@@ -53,7 +53,7 @@ function formatReportForSlack(
  * Deliver submitted report to Slack (fire-and-forget, non-blocking).
  * Failures are logged but do not affect the submit response.
  */
-async function deliverToSlack(reportId: string, workspaceId: string) {
+async function deliverToSlack(reportId: string, workspaceId: string, channelId?: string) {
   try {
     const admin = createAdminClient();
 
@@ -104,41 +104,65 @@ async function deliverToSlack(reportId: string, workspaceId: string) {
       template,
     );
 
-    // Look up Slack user by email
-    let slackUserId: string | undefined;
-    try {
-      const lookupResult = await slackClient.users.lookupByEmail({
-        email: report.profiles?.email ?? "",
+    if (channelId) {
+      // Channel delivery: post to the specified Slack channel
+      try {
+        await slackClient.conversations.join({ channel: channelId });
+      } catch {
+        // Already in channel or cannot join — continue anyway
+      }
+
+      await slackClient.chat.postMessage({
+        channel: channelId,
+        text: formattedMessage,
+        mrkdwn: true,
       });
-      slackUserId = lookupResult.user?.id;
-    } catch {
-      return; // User not found in Slack
+
+      // Record delivery
+      const deliveryPayload: ReportDeliveryInsert = {
+        report_id: reportId,
+        channel: "slack_channel",
+        recipient: channelId,
+        status: "sent",
+        sent_at: new Date().toISOString(),
+      };
+      await admin.from("report_deliveries").insert(deliveryPayload as never);
+    } else {
+      // DM delivery: look up Slack user by email and send DM
+      let slackUserId: string | undefined;
+      try {
+        const lookupResult = await slackClient.users.lookupByEmail({
+          email: report.profiles?.email ?? "",
+        });
+        slackUserId = lookupResult.user?.id;
+      } catch {
+        return; // User not found in Slack
+      }
+
+      if (!slackUserId) return;
+
+      const dmResult = await slackClient.conversations.open({
+        users: slackUserId,
+      });
+      const dmChannelId = dmResult.channel?.id;
+      if (!dmChannelId) return;
+
+      await slackClient.chat.postMessage({
+        channel: dmChannelId,
+        text: formattedMessage,
+        mrkdwn: true,
+      });
+
+      // Record delivery
+      const deliveryPayload: ReportDeliveryInsert = {
+        report_id: reportId,
+        channel: "slack_dm",
+        recipient: slackUserId,
+        status: "sent",
+        sent_at: new Date().toISOString(),
+      };
+      await admin.from("report_deliveries").insert(deliveryPayload as never);
     }
-
-    if (!slackUserId) return;
-
-    // Open DM and send
-    const dmResult = await slackClient.conversations.open({
-      users: slackUserId,
-    });
-    const dmChannelId = dmResult.channel?.id;
-    if (!dmChannelId) return;
-
-    await slackClient.chat.postMessage({
-      channel: dmChannelId,
-      text: formattedMessage,
-      mrkdwn: true,
-    });
-
-    // Record delivery
-    const deliveryPayload: ReportDeliveryInsert = {
-      report_id: reportId,
-      channel: "slack_dm",
-      recipient: slackUserId,
-      status: "sent",
-      sent_at: new Date().toISOString(),
-    };
-    await admin.from("report_deliveries").insert(deliveryPayload as never);
 
     // Update report status to delivered
     const deliveredUpdate: DailyReportUpdate = { status: "delivered" };
@@ -154,6 +178,8 @@ async function deliverToSlack(reportId: string, workspaceId: string) {
 export async function POST(_request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
+    const body = await _request.json().catch(() => ({}));
+    const { channel_id } = body as { channel_id?: string };
     const supabase = await createClient();
 
     const {
@@ -234,7 +260,7 @@ export async function POST(_request: Request, context: RouteContext) {
     }
 
     // Deliver to Slack in the background (non-blocking)
-    deliverToSlack(report.id, report.workspace_id).catch(() => {});
+    deliverToSlack(report.id, report.workspace_id, channel_id).catch(() => {});
 
     return NextResponse.json({ report: updated });
   } catch (error) {

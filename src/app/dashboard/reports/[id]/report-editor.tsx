@@ -2,11 +2,12 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Send, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, Save, Loader2, Hash, Lock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
 import type { ReportContent, ReportStatus } from "@/lib/supabase/types";
 
@@ -54,6 +55,10 @@ export function ReportEditor({ initialReport }: ReportEditorProps) {
   );
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [channels, setChannels] = useState<{id: string; name: string; is_private: boolean}[]>([]);
+  const [isLoadingChannels, setIsLoadingChannels] = useState(false);
+  const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
 
   const isSubmitted = status === "submitted" || status === "delivered";
   const isEditable = status === "draft";
@@ -101,8 +106,35 @@ export function ReportEditor({ initialReport }: ReportEditorProps) {
     }
   }, [buildContent, initialReport.id, toast]);
 
+  // ---------- Open share dialog ----------
+  const handleOpenShareDialog = useCallback(async () => {
+    setShareDialogOpen(true);
+    setIsLoadingChannels(true);
+    setSelectedChannelId(null);
+
+    try {
+      const res = await fetch(
+        `/api/slack/channels?workspace_id=${initialReport.workspaceId}`,
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast(data.error ?? "チャンネルの取得に失敗しました", "error");
+        setShareDialogOpen(false);
+        return;
+      }
+
+      setChannels(data.channels as {id: string; name: string; is_private: boolean}[]);
+    } catch {
+      toast("チャンネルの取得に失敗しました", "error");
+      setShareDialogOpen(false);
+    } finally {
+      setIsLoadingChannels(false);
+    }
+  }, [initialReport.workspaceId, toast]);
+
   // ---------- Submit (POST) ----------
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(async (channelId: string) => {
     setSubmitting(true);
     try {
       // First save current edits
@@ -118,26 +150,28 @@ export function ReportEditor({ initialReport }: ReportEditorProps) {
         throw new Error(data.error || "保存に失敗しました");
       }
 
-      // Then submit
+      // Then submit with channel_id
       const submitRes = await fetch(
         `/api/reports/${initialReport.id}/submit`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ channel_id: channelId }),
         },
       );
 
       if (!submitRes.ok) {
         const data = await submitRes.json().catch(() => ({}));
-        throw new Error(data.error || "提出に失敗しました");
+        throw new Error(data.error || "共有に失敗しました");
       }
 
       setStatus("submitted");
-      toast("日報を提出しました", "success");
+      setShareDialogOpen(false);
+      toast("日報をSlackに共有しました", "success");
       router.refresh();
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "提出に失敗しました";
+        err instanceof Error ? err.message : "共有に失敗しました";
       toast(message, "error");
     } finally {
       setSubmitting(false);
@@ -148,7 +182,7 @@ export function ReportEditor({ initialReport }: ReportEditorProps) {
   const statusLabel = (() => {
     switch (status) {
       case "submitted":
-        return "提出済み";
+        return "共有済み";
       case "delivered":
         return "配信済み";
       case "draft":
@@ -206,13 +240,9 @@ export function ReportEditor({ initialReport }: ReportEditorProps) {
                   )}
                   {saving ? "保存中..." : "保存"}
                 </Button>
-                <Button onClick={handleSubmit} disabled={submitting}>
-                  {submitting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="mr-2 h-4 w-4" />
-                  )}
-                  {submitting ? "提出中..." : "提出する"}
+                <Button onClick={handleOpenShareDialog} disabled={submitting}>
+                  <Send className="mr-2 h-4 w-4" />
+                  Slackに共有する
                 </Button>
               </>
             )}
@@ -277,6 +307,91 @@ export function ReportEditor({ initialReport }: ReportEditorProps) {
           </Card>
         ))}
       </div>
+
+      {/* Share to Slack dialog */}
+      <Dialog
+        open={shareDialogOpen}
+        onClose={() => setShareDialogOpen(false)}
+        title="Slackに共有"
+        description="共有先のチャンネルを選択してください。"
+        className="max-w-lg"
+      >
+        <div className="flex flex-col gap-4">
+          {isLoadingChannels ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-[var(--text-muted)]" />
+              <span className="ml-2 text-sm text-[var(--text-secondary)]">
+                チャンネルを読み込み中...
+              </span>
+            </div>
+          ) : (
+            <>
+              <div className="max-h-80 overflow-y-auto rounded-lg border border-[var(--border-primary)]">
+                {channels.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-[var(--text-secondary)]">
+                    チャンネルが見つかりませんでした。
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-[var(--border-primary)]">
+                    {channels.map((channel) => (
+                      <li key={channel.id}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedChannelId(channel.id)}
+                          className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--bg-hover)] ${
+                            selectedChannelId === channel.id
+                              ? "bg-[var(--accent)]/10"
+                              : ""
+                          }`}
+                        >
+                          <div className="flex min-w-0 flex-1 items-center gap-2">
+                            {channel.is_private ? (
+                              <Lock className="h-3.5 w-3.5 flex-shrink-0 text-[var(--text-muted)]" />
+                            ) : (
+                              <Hash className="h-3.5 w-3.5 flex-shrink-0 text-[var(--text-muted)]" />
+                            )}
+                            <span className={`truncate text-sm ${
+                              selectedChannelId === channel.id
+                                ? "font-semibold text-[var(--accent)]"
+                                : "font-medium text-[var(--text-primary)]"
+                            }`}>
+                              {channel.name}
+                            </span>
+                          </div>
+                          {selectedChannelId === channel.id && (
+                            <div className="h-2 w-2 flex-shrink-0 rounded-full bg-[var(--accent)]" />
+                          )}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShareDialogOpen(false)}
+                >
+                  キャンセル
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (selectedChannelId) handleSubmit(selectedChannelId);
+                  }}
+                  disabled={!selectedChannelId || submitting}
+                >
+                  {submitting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="mr-2 h-4 w-4" />
+                  )}
+                  {submitting ? "共有中..." : "共有する"}
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      </Dialog>
     </div>
   );
 }

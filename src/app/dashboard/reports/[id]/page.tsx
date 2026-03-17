@@ -25,6 +25,7 @@ export interface ReportData {
   status: ReportStatus;
   content: ReportContent;
   template: ReportTemplate;
+  workspaceId: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -115,6 +116,7 @@ export default async function ReportDetailPage({
     status: report.status,
     content,
     template,
+    workspaceId: report.workspace_id,
   };
 
   return (
