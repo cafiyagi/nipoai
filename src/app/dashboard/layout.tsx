@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/layout/sidebar";
+import { isSuperAdmin } from "@/lib/auth/admin";
 import type { Profile, Workspace, UserWorkspaceMembership } from "@/lib/supabase/types";
 
 // ---------------------------------------------------------------------------
@@ -130,7 +131,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
-      <Sidebar user={sidebarUser} workspaces={workspaces} plan={workspacePlan} />
+      <Sidebar user={sidebarUser} workspaces={workspaces} plan={workspacePlan} isAdmin={isSuperAdmin(user.email)} />
       <main className="lg:pl-64">
         <div className="mx-auto max-w-6xl">{children}</div>
       </main>

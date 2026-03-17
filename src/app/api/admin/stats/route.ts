@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const SUPER_ADMIN_EMAILS = ["cafiyagi@gmail.com"];
+import { isSuperAdmin } from "@/lib/auth/admin";
 
 export async function GET() {
   try {
@@ -12,7 +11,7 @@ export async function GET() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user || !SUPER_ADMIN_EMAILS.includes(user.email ?? "")) {
+    if (!user || !isSuperAdmin(user.email)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

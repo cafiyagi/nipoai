@@ -42,6 +42,7 @@ export interface SidebarProps {
   user: SidebarUser;
   workspaces: SidebarWorkspace[];
   plan?: "free" | "starter" | "team";
+  isAdmin?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -53,8 +54,6 @@ interface NavItem {
   href: string;
   icon: typeof Home;
 }
-
-const SUPER_ADMIN_EMAILS = ["cafiyagi@gmail.com"];
 
 interface NavItemWithLock extends NavItem {
   minPlan?: "starter" | "team";
@@ -86,12 +85,14 @@ function SidebarContent({
   user,
   workspaces,
   plan = "free",
+  isAdmin = false,
   onNavigate,
 }: {
   pathname: string;
   user: SidebarUser;
   workspaces: SidebarWorkspace[];
   plan?: "free" | "starter" | "team";
+  isAdmin?: boolean;
   onNavigate?: () => void;
 }) {
   const [signingOut, setSigningOut] = useState(false);
@@ -130,7 +131,7 @@ function SidebarContent({
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4">
         <ul className="flex flex-col gap-1">
-          {[...navItems, ...(SUPER_ADMIN_EMAILS.includes(user.email) ? [{ ...adminNavItem }] : [])].map((item) => {
+          {[...navItems, ...(isAdmin ? [{ ...adminNavItem }] : [])].map((item) => {
             const isActive =
               item.href === "/dashboard"
                 ? pathname === "/dashboard"
@@ -212,7 +213,7 @@ function SidebarContent({
 // Sidebar (main export)
 // ---------------------------------------------------------------------------
 
-function Sidebar({ user, workspaces, plan = "free" }: SidebarProps) {
+function Sidebar({ user, workspaces, plan = "free", isAdmin = false }: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -255,6 +256,7 @@ function Sidebar({ user, workspaces, plan = "free" }: SidebarProps) {
           user={user}
           workspaces={workspaces}
           plan={plan}
+          isAdmin={isAdmin}
           onNavigate={() => setMobileOpen(false)}
         />
       </aside>
@@ -266,6 +268,7 @@ function Sidebar({ user, workspaces, plan = "free" }: SidebarProps) {
           user={user}
           workspaces={workspaces}
           plan={plan}
+          isAdmin={isAdmin}
         />
       </aside>
     </>

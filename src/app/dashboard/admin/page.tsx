@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import {
   Eye,
   MousePointerClick,
@@ -11,14 +12,13 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isSuperAdmin } from "@/lib/auth/admin";
 import { Header } from "@/components/layout/header";
 import { AdminUserDeleteButton } from "./admin-user-delete-button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format, startOfDay, subDays } from "date-fns";
 import { ja } from "date-fns/locale";
-
-const SUPER_ADMIN_EMAILS = ["cafiyagi@gmail.com"];
 
 // ---------------------------------------------------------------------------
 // Types
@@ -287,11 +287,22 @@ export default async function AdminPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user || !SUPER_ADMIN_EMAILS.includes(user.email ?? "")) {
+  if (!user || !isSuperAdmin(user.email)) {
     redirect("/dashboard");
   }
 
   const admin = createAdminClient();
+
+  // Audit log: admin dashboard access
+  const headerStore = await headers();
+  await admin.from("admin_audit_logs").insert({
+    admin_user_id: user.id,
+    admin_email: user.email,
+    action: "admin_dashboard_access",
+    target_type: null,
+    target_id: null,
+    metadata: { user_agent: headerStore.get("user-agent") },
+  } as never);
 
   const [
     profilesResult,
@@ -812,7 +823,7 @@ export default async function AdminPage() {
                           {formatFullDate(profile.created_at)}
                         </td>
                         <td className="py-3">
-                          {!SUPER_ADMIN_EMAILS.includes(profile.email) && (
+                          {!isSuperAdmin(profile.email) && (
                             <AdminUserDeleteButton
                               userId={profile.id}
                               displayName={profile.display_name || profile.email}
