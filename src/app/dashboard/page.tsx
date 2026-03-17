@@ -16,8 +16,7 @@ import { RecentReportsList } from "./recent-reports-list";
 import { UsageBar } from "./usage-bar";
 import { getReportUsage } from "@/lib/plan-gate";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { DEFAULT_TEMPLATE } from "@/lib/report-template";
-import { TemplateEditor } from "./settings/template/template-editor";
+import { FileEdit } from "lucide-react";
 import type {
   ReportStatus,
   ReportContent,
@@ -161,9 +160,6 @@ export default async function DashboardPage() {
     workspace.plan as Plan,
   );
 
-  // Template for admin editor
-  const template = workspace.report_template ?? DEFAULT_TEMPLATE;
-
   return (
     <div>
       <Header title="ダッシュボード" />
@@ -269,14 +265,22 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Template editor (admin only) */}
+        {/* Template edit link (admin only) */}
         {isAdmin && (
-          <div className="mt-6">
-            <TemplateEditor
-              workspaceId={workspaceId}
-              initialTemplate={template}
-            />
-          </div>
+          <Link href="/dashboard/settings?tab=template">
+            <Card className="mt-4 cursor-pointer transition-colors hover:bg-[var(--bg-hover)]">
+              <CardContent className="flex items-center gap-3 py-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent)]/10">
+                  <FileEdit className="h-5 w-5 text-[var(--accent)]" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-[var(--text-primary)]">日報テンプレートを編集</p>
+                  <p className="text-xs text-[var(--text-muted)]">セクションの追加・並び替え・AI指示の設定</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-[var(--text-muted)]" />
+              </CardContent>
+            </Card>
+          </Link>
         )}
       </div>
     </div>
