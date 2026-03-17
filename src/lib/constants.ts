@@ -1,8 +1,33 @@
 import type { Plan } from "@/lib/supabase/types";
 
 // ---------------------------------------------------------------------------
-// Plan definitions
+// Plan definitions — Single Source of Truth
 // ---------------------------------------------------------------------------
+
+export interface PlanLimits {
+  /** Maximum number of workspace members. */
+  maxMembers: number;
+  /** Whether AI-powered report generation is available. */
+  aiGeneration: boolean;
+  /** Maximum AI report generations per month. */
+  maxReportsPerMonth: number;
+  /** Data retention in days. Infinity = unlimited. */
+  retentionDays: number;
+  /** Whether Slack integration is available. */
+  slackIntegration: boolean;
+  /** Whether email delivery is available. */
+  emailDelivery: boolean;
+  /** Number of Slack channels reports can be delivered to. */
+  maxSlackChannels: number;
+  /** Whether weekly report generation is available. */
+  weeklyReport: boolean;
+  /** Whether CSV export is available. */
+  csvExport: boolean;
+  /** Whether a watermark is shown on reports. */
+  watermark: boolean;
+  /** Whether the admin analytics dashboard is available. */
+  adminDashboard: boolean;
+}
 
 export interface PlanDefinition {
   /** Internal identifier — matches the `plan` column in the database. */
@@ -14,20 +39,7 @@ export interface PlanDefinition {
   /** Bullet-point features shown on the pricing page. */
   features: string[];
   /** Hard limits enforced by the application. */
-  limits: {
-    /** Maximum number of workspace members. */
-    maxMembers: number;
-    /** Maximum number of daily reports stored (rolling window). */
-    maxReportsHistory: number;
-    /** Whether AI-powered report generation is available. */
-    aiGeneration: boolean;
-    /** Whether Slack integration is available. */
-    slackIntegration: boolean;
-    /** Whether email delivery is available. */
-    emailDelivery: boolean;
-    /** Number of Slack channels reports can be delivered to. */
-    maxSlackChannels: number;
-  };
+  limits: PlanLimits;
 }
 
 export const PLANS: Record<Plan, PlanDefinition> = {
@@ -37,16 +49,22 @@ export const PLANS: Record<Plan, PlanDefinition> = {
     price: 0,
     features: [
       "メンバー3名まで",
+      "月10回のAI日報生成",
       "直近7日分のレポート保存",
       "手動レポート作成",
     ],
     limits: {
       maxMembers: 3,
-      maxReportsHistory: 7,
-      aiGeneration: false,
+      maxReportsPerMonth: 10,
+      retentionDays: 7,
+      aiGeneration: true,
       slackIntegration: false,
       emailDelivery: false,
       maxSlackChannels: 0,
+      weeklyReport: false,
+      csvExport: false,
+      watermark: true,
+      adminDashboard: false,
     },
   },
   starter: {
@@ -55,18 +73,25 @@ export const PLANS: Record<Plan, PlanDefinition> = {
     price: 550,
     features: [
       "メンバー10名まで",
+      "無制限のAI日報生成",
       "直近90日分のレポート保存",
-      "AI日報生成",
+      "週報の自動生成",
       "Slack連携（1チャンネル）",
       "メール配信",
+      "CSVエクスポート",
     ],
     limits: {
       maxMembers: 10,
-      maxReportsHistory: 90,
+      maxReportsPerMonth: Infinity,
+      retentionDays: 90,
       aiGeneration: true,
       slackIntegration: true,
       emailDelivery: true,
       maxSlackChannels: 1,
+      weeklyReport: true,
+      csvExport: true,
+      watermark: false,
+      adminDashboard: false,
     },
   },
   team: {
@@ -74,24 +99,42 @@ export const PLANS: Record<Plan, PlanDefinition> = {
     name: "Team",
     price: 1250,
     features: [
-      "メンバー無制限",
+      "メンバー30名まで",
+      "無制限のAI日報生成",
       "無制限のレポート保存",
-      "AI日報生成",
+      "週報の自動生成",
       "Slack連携（無制限チャンネル）",
       "メール配信",
-      "カスタムレポートテンプレート",
+      "CSVエクスポート",
+      "管理者ダッシュボード",
       "優先サポート",
     ],
     limits: {
-      maxMembers: Infinity,
-      maxReportsHistory: Infinity,
+      maxMembers: 30,
+      maxReportsPerMonth: Infinity,
+      retentionDays: Infinity,
       aiGeneration: true,
       slackIntegration: true,
       emailDelivery: true,
       maxSlackChannels: Infinity,
+      weeklyReport: true,
+      csvExport: true,
+      watermark: false,
+      adminDashboard: true,
     },
   },
 } as const;
+
+// ---------------------------------------------------------------------------
+// Helper: check if a plan has a specific feature enabled
+// ---------------------------------------------------------------------------
+
+export function getPlanLimit<K extends keyof PlanLimits>(
+  plan: Plan,
+  key: K,
+): PlanLimits[K] {
+  return PLANS[plan].limits[key];
+}
 
 // ---------------------------------------------------------------------------
 // Default report sections

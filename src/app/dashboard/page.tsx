@@ -13,11 +13,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { TodayReportCard } from "./today-report-card";
 import { RecentReportsList } from "./recent-reports-list";
+import { UsageBar } from "./usage-bar";
+import { getReportUsage } from "@/lib/plan-gate";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   ReportStatus,
   ReportContent,
   DailyReport,
   SlackIntegration,
+  Plan,
 } from "@/lib/supabase/types";
 
 // ---------------------------------------------------------------------------
@@ -147,6 +151,14 @@ export default async function DashboardPage() {
   // Report generation time
   const reportGenerationTime = workspace.report_generation_time ?? null;
 
+  // Report usage (for free plan quota display)
+  const admin = createAdminClient();
+  const reportUsage = await getReportUsage(
+    admin,
+    workspaceId,
+    workspace.plan as Plan,
+  );
+
   return (
     <div>
       <Header title="ダッシュボード" />
@@ -171,6 +183,17 @@ export default async function DashboardPage() {
             reportGenerationTime={reportGenerationTime}
           />
         </div>
+
+        {/* Usage bar for limited plans */}
+        {reportUsage.limit !== Infinity && (
+          <div className="mb-6">
+            <UsageBar
+              used={reportUsage.used}
+              limit={reportUsage.limit}
+              remaining={reportUsage.remaining}
+            />
+          </div>
+        )}
 
         {/* Compact stats row */}
         <div className="mb-8 grid gap-4 sm:grid-cols-2">

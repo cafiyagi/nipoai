@@ -41,11 +41,11 @@ const jsonLd = {
         },
         {
           "@type": "Offer",
-          name: "Standard",
+          name: "Starter",
           price: "550",
           priceCurrency: "JPY",
           billingIncrement: "P1M",
-          description: "10ユーザーまで、無制限の日報生成",
+          description: "10ユーザーまで、無制限の日報生成、週報対応",
         },
         {
           "@type": "Offer",
@@ -53,7 +53,7 @@ const jsonLd = {
           price: "1250",
           priceCurrency: "JPY",
           billingIncrement: "P1M",
-          description: "30ユーザーまで、高度なAI分析・チーム分析ダッシュボード",
+          description: "30ユーザーまで、管理者ダッシュボード・優先サポート",
         },
       ],
     },
@@ -471,29 +471,29 @@ export default function LandingPage() {
               description="まずは個人で試したい方に"
               features={[
                 "3ユーザーまで",
-                "月10件の日報生成",
-                "Slack 1チャンネル連携",
+                "月10回のAI日報生成",
+                "7日間のデータ保持",
                 "基本テンプレート",
               ]}
               cta="無料で始める"
               highlighted={false}
             />
 
-            {/* Standard */}
+            {/* Starter */}
             <PricingCard
-              name="Standard"
+              name="Starter"
               price="¥550"
               period="月額・税込"
               description="小規模チームでの本格利用に"
               features={[
                 "10ユーザーまで",
-                "無制限の日報生成",
-                "Slack 複数チャンネル連携",
-                "カスタムテンプレート",
-                "CSV / PDFエクスポート",
-                "メール通知",
+                "無制限のAI日報生成",
+                "90日間のデータ保持",
+                "週報の自動生成",
+                "Slack連携",
+                "テンプレートカスタマイズ",
               ]}
-              cta="Standardを始める"
+              cta="Starterを始める"
               highlighted={true}
             />
 
@@ -505,11 +505,9 @@ export default function LandingPage() {
               description="組織全体での利用に"
               features={[
                 "30ユーザーまで",
-                "無制限の日報生成",
-                "ワークスペース全体連携",
-                "高度なAI分析・要約",
-                "チーム分析ダッシュボード",
-                "API連携",
+                "無制限のAI日報生成",
+                "無制限のデータ保持",
+                "管理者ダッシュボード",
                 "優先サポート",
               ]}
               cta="Teamを始める"
@@ -544,7 +542,7 @@ export default function LandingPage() {
             />
             <FaqItem
               question="無料プランでどこまで使えますか？"
-              answer="3名までのチームで月10件の日報生成が可能です。基本的な機能は全て使えるので、まずは無料でお試しください。"
+              answer="3名までのチームで月10回のAI日報生成が可能です。7日間のデータ保持、基本テンプレートが使えます。まずは無料でお試しください。"
             />
             <FaqItem
               question="導入にどれくらい時間がかかりますか？"

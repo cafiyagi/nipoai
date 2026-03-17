@@ -82,6 +82,9 @@ export default async function DashboardLayout({
       name: m.workspaces.name,
     }));
 
+  // Get the plan from the first workspace
+  let workspacePlan: "free" | "starter" | "team" = memberships[0]?.workspaces?.plan ?? "free";
+
   // -------------------------------------------------------------------------
   // 4. Auto-create workspace if user has none (first-time login)
   // -------------------------------------------------------------------------
@@ -127,7 +130,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
-      <Sidebar user={sidebarUser} workspaces={workspaces} />
+      <Sidebar user={sidebarUser} workspaces={workspaces} plan={workspacePlan} />
       <main className="lg:pl-64">
         <div className="mx-auto max-w-6xl">{children}</div>
       </main>

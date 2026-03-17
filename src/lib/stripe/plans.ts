@@ -1,4 +1,5 @@
 import type { Plan } from "@/lib/supabase/types";
+import { PLANS } from "@/lib/constants";
 
 export interface StripePlanConfig {
   plan: Plan;
@@ -15,35 +16,35 @@ export interface StripePlanConfig {
 export const STRIPE_PLANS: Record<Plan, StripePlanConfig> = {
   free: {
     plan: "free",
-    name: "Free",
-    priceMonthly: 0,
-    stripePriceId: "", // No Stripe price for free tier
+    name: PLANS.free.name,
+    priceMonthly: PLANS.free.price,
+    stripePriceId: "",
     limits: {
-      maxMembers: 3,
-      maxReportsPerMonth: 30,
-      retentionDays: 7,
+      maxMembers: PLANS.free.limits.maxMembers,
+      maxReportsPerMonth: PLANS.free.limits.maxReportsPerMonth,
+      retentionDays: PLANS.free.limits.retentionDays,
     },
   },
   starter: {
     plan: "starter",
-    name: "Starter",
-    priceMonthly: 550,
+    name: PLANS.starter.name,
+    priceMonthly: PLANS.starter.price,
     stripePriceId: process.env.STRIPE_PRICE_STARTER ?? "price_starter_placeholder",
     limits: {
-      maxMembers: 10,
-      maxReportsPerMonth: 300,
-      retentionDays: 90,
+      maxMembers: PLANS.starter.limits.maxMembers,
+      maxReportsPerMonth: PLANS.starter.limits.maxReportsPerMonth,
+      retentionDays: PLANS.starter.limits.retentionDays,
     },
   },
   team: {
     plan: "team",
-    name: "Team",
-    priceMonthly: 1250,
+    name: PLANS.team.name,
+    priceMonthly: PLANS.team.price,
     stripePriceId: process.env.STRIPE_PRICE_TEAM ?? "price_team_placeholder",
     limits: {
-      maxMembers: Infinity,
-      maxReportsPerMonth: Infinity,
-      retentionDays: Infinity,
+      maxMembers: PLANS.team.limits.maxMembers,
+      maxReportsPerMonth: PLANS.team.limits.maxReportsPerMonth,
+      retentionDays: PLANS.team.limits.retentionDays,
     },
   },
 } as const;

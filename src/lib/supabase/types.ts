@@ -243,6 +243,45 @@ export interface Database {
         };
       };
 
+      weekly_reports: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          user_id: string;
+          week_start: string;
+          week_end: string;
+          content: Record<string, string[]>;
+          source_report_ids: string[];
+          ai_model: string | null;
+          token_usage: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          user_id: string;
+          week_start: string;
+          week_end: string;
+          content: Record<string, string[]>;
+          source_report_ids?: string[];
+          ai_model?: string | null;
+          token_usage?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          user_id?: string;
+          week_start?: string;
+          week_end?: string;
+          content?: Record<string, string[]>;
+          source_report_ids?: string[];
+          ai_model?: string | null;
+          token_usage?: number | null;
+          created_at?: string;
+        };
+      };
+
       subscriptions: {
         Row: {
           id: string;
@@ -325,6 +364,10 @@ export type DailyReportUpdate = Tables["daily_reports"]["Update"];
 export type ReportDelivery = Tables["report_deliveries"]["Row"];
 export type ReportDeliveryInsert = Tables["report_deliveries"]["Insert"];
 export type ReportDeliveryUpdate = Tables["report_deliveries"]["Update"];
+
+export type WeeklyReport = Tables["weekly_reports"]["Row"];
+export type WeeklyReportInsert = Tables["weekly_reports"]["Insert"];
+export type WeeklyReportUpdate = Tables["weekly_reports"]["Update"];
 
 export type Subscription = Tables["subscriptions"]["Row"];
 export type SubscriptionInsert = Tables["subscriptions"]["Insert"];

@@ -14,6 +14,9 @@ import {
   Shield,
   Sun,
   Moon,
+  CalendarRange,
+  BarChart3,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
@@ -38,6 +41,7 @@ export interface SidebarWorkspace {
 export interface SidebarProps {
   user: SidebarUser;
   workspaces: SidebarWorkspace[];
+  plan?: "free" | "starter" | "team";
 }
 
 // ---------------------------------------------------------------------------
@@ -52,9 +56,15 @@ interface NavItem {
 
 const SUPER_ADMIN_EMAILS = ["cafiyagi@gmail.com"];
 
-const navItems: NavItem[] = [
+interface NavItemWithLock extends NavItem {
+  minPlan?: "starter" | "team";
+}
+
+const navItems: NavItemWithLock[] = [
   { label: "ダッシュボード", href: "/dashboard", icon: Home },
   { label: "日報一覧", href: "/dashboard/reports", icon: FileText },
+  { label: "週報", href: "/dashboard/weekly", icon: CalendarRange, minPlan: "starter" },
+  { label: "分析", href: "/dashboard/analytics", icon: BarChart3, minPlan: "team" },
   { label: "チーム", href: "/dashboard/team", icon: Users },
   { label: "設定", href: "/dashboard/settings", icon: Settings },
 ];
@@ -69,15 +79,19 @@ const adminNavItem: NavItem = {
 // SidebarContent (inner, shared between mobile + desktop)
 // ---------------------------------------------------------------------------
 
+const PLAN_RANK: Record<string, number> = { free: 0, starter: 1, team: 2 };
+
 function SidebarContent({
   pathname,
   user,
   workspaces,
+  plan = "free",
   onNavigate,
 }: {
   pathname: string;
   user: SidebarUser;
   workspaces: SidebarWorkspace[];
+  plan?: "free" | "starter" | "team";
   onNavigate?: () => void;
 }) {
   const [signingOut, setSigningOut] = useState(false);
@@ -116,12 +130,16 @@ function SidebarContent({
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4">
         <ul className="flex flex-col gap-1">
-          {[...navItems, ...(SUPER_ADMIN_EMAILS.includes(user.email) ? [adminNavItem] : [])].map((item) => {
+          {[...navItems, ...(SUPER_ADMIN_EMAILS.includes(user.email) ? [{ ...adminNavItem }] : [])].map((item) => {
             const isActive =
               item.href === "/dashboard"
                 ? pathname === "/dashboard"
                 : pathname.startsWith(item.href);
             const Icon = item.icon;
+            const minPlan = "minPlan" in item ? (item as NavItemWithLock).minPlan : undefined;
+            const isLocked = minPlan
+              ? PLAN_RANK[plan] < PLAN_RANK[minPlan]
+              : false;
 
             return (
               <li key={item.href}>
@@ -138,6 +156,9 @@ function SidebarContent({
                 >
                   <Icon className="h-5 w-5 shrink-0" />
                   {item.label}
+                  {isLocked && (
+                    <Lock className="ml-auto h-3.5 w-3.5 text-[var(--text-muted)]" />
+                  )}
                 </Link>
               </li>
             );
@@ -191,7 +212,7 @@ function SidebarContent({
 // Sidebar (main export)
 // ---------------------------------------------------------------------------
 
-function Sidebar({ user, workspaces }: SidebarProps) {
+function Sidebar({ user, workspaces, plan = "free" }: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -233,6 +254,7 @@ function Sidebar({ user, workspaces }: SidebarProps) {
           pathname={pathname}
           user={user}
           workspaces={workspaces}
+          plan={plan}
           onNavigate={() => setMobileOpen(false)}
         />
       </aside>
@@ -243,6 +265,7 @@ function Sidebar({ user, workspaces }: SidebarProps) {
           pathname={pathname}
           user={user}
           workspaces={workspaces}
+          plan={plan}
         />
       </aside>
     </>

@@ -15,6 +15,7 @@ import {
   Crown,
   Sparkles,
   Shield,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,16 +27,17 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
+import { PLANS } from "@/lib/constants";
 import type { Workspace, Subscription, Plan } from "@/lib/supabase/types";
 
 /* -------------------------------------------------------------------------- */
-/*  Constants                                                                  */
+/*  Constants derived from PLANS                                               */
 /* -------------------------------------------------------------------------- */
 
 const PLAN_LABELS: Record<Plan, string> = {
-  free: "Free",
-  starter: "Standard",
-  team: "Team",
+  free: PLANS.free.name,
+  starter: PLANS.starter.name,
+  team: PLANS.team.name,
 };
 
 const PLAN_DESCRIPTIONS: Record<Plan, string> = {
@@ -51,76 +53,144 @@ const PLAN_ICONS: Record<Plan, typeof Zap> = {
 };
 
 const PLAN_PRICES_MONTHLY: Record<Plan, number> = {
-  free: 0,
-  starter: 550,
-  team: 1250,
+  free: PLANS.free.price,
+  starter: PLANS.starter.price,
+  team: PLANS.team.price,
 };
 
 const PLAN_PRICES_ANNUAL: Record<Plan, number> = {
   free: 0,
-  starter: 440,
-  team: 1000,
+  starter: Math.round(PLANS.starter.price * 0.8),
+  team: Math.round(PLANS.team.price * 0.8),
 };
 
 const PLAN_MEMBER_LIMITS: Record<Plan, number> = {
-  free: 3,
-  starter: 10,
-  team: 30,
+  free: PLANS.free.limits.maxMembers,
+  starter: PLANS.starter.limits.maxMembers,
+  team: PLANS.team.limits.maxMembers,
 };
 
 const PLAN_REPORT_LIMITS: Record<Plan, number> = {
-  free: 30,
-  starter: Infinity,
-  team: Infinity,
+  free: PLANS.free.limits.maxReportsPerMonth,
+  starter: PLANS.starter.limits.maxReportsPerMonth,
+  team: PLANS.team.limits.maxReportsPerMonth,
 };
 
 const PLAN_ORDER: Plan[] = ["free", "starter", "team"];
 
+function formatLimit(val: number): string {
+  return val === Infinity ? "無制限" : `${val}`;
+}
+
+function formatDays(val: number): string {
+  if (val === Infinity) return "無制限";
+  return `${val}日間`;
+}
+
+/* Features that are actually implemented */
+type FeatureStatus = "live" | "coming_soon";
+
 interface PlanFeature {
   label: string;
+  status: FeatureStatus;
   free: string | boolean;
   starter: string | boolean;
   team: string | boolean;
 }
 
 const PLAN_FEATURES: PlanFeature[] = [
-  { label: "メンバー数", free: "最大3名", starter: "最大10名", team: "最大30名" },
-  { label: "月間日報生成数", free: "30回", starter: "無制限", team: "無制限" },
-  { label: "データ保持期間", free: "7日間", starter: "90日間", team: "無制限" },
-  { label: "ウォーターマーク", free: "あり", starter: "なし", team: "なし" },
-  { label: "週報・月報生成", free: false, starter: true, team: true },
-  { label: "Slack連携", free: false, starter: true, team: true },
-  { label: "テンプレートカスタマイズ", free: false, starter: true, team: true },
-  { label: "管理者ダッシュボード", free: false, starter: false, team: true },
-  { label: "API連携", free: false, starter: false, team: true },
-  { label: "CSV/PDFエクスポート", free: false, starter: true, team: true },
-  { label: "優先サポート", free: false, starter: false, team: true },
-  { label: "SSO / SAML", free: false, starter: false, team: true },
+  {
+    label: "メンバー数",
+    status: "live",
+    free: `最大${PLANS.free.limits.maxMembers}名`,
+    starter: `最大${PLANS.starter.limits.maxMembers}名`,
+    team: `最大${PLANS.team.limits.maxMembers}名`,
+  },
+  {
+    label: "月間AI日報生成数",
+    status: "live",
+    free: `${PLANS.free.limits.maxReportsPerMonth}回`,
+    starter: "無制限",
+    team: "無制限",
+  },
+  {
+    label: "データ保持期間",
+    status: "live",
+    free: formatDays(PLANS.free.limits.retentionDays),
+    starter: formatDays(PLANS.starter.limits.retentionDays),
+    team: formatDays(PLANS.team.limits.retentionDays),
+  },
+  {
+    label: "ウォーターマーク",
+    status: "live",
+    free: "あり",
+    starter: "なし",
+    team: "なし",
+  },
+  {
+    label: "Slack連携",
+    status: "live",
+    free: false,
+    starter: true,
+    team: true,
+  },
+  {
+    label: "テンプレートカスタマイズ",
+    status: "live",
+    free: false,
+    starter: true,
+    team: true,
+  },
+  {
+    label: "週報生成",
+    status: "live",
+    free: false,
+    starter: true,
+    team: true,
+  },
+  {
+    label: "CSVエクスポート",
+    status: "coming_soon",
+    free: false,
+    starter: true,
+    team: true,
+  },
+  {
+    label: "管理者ダッシュボード",
+    status: "live",
+    free: false,
+    starter: false,
+    team: true,
+  },
+  {
+    label: "優先サポート",
+    status: "live",
+    free: false,
+    starter: false,
+    team: true,
+  },
 ];
 
 const FEATURE_HIGHLIGHTS: Record<Plan, string[]> = {
   free: [
-    "最大3名まで利用可能",
-    "月30回のAI日報生成",
-    "7日間のデータ保持",
+    `最大${PLANS.free.limits.maxMembers}名まで利用可能`,
+    `月${PLANS.free.limits.maxReportsPerMonth}回のAI日報生成`,
+    `${PLANS.free.limits.retentionDays}日間のデータ保持`,
   ],
   starter: [
-    "最大10名まで利用可能",
+    `最大${PLANS.starter.limits.maxMembers}名まで利用可能`,
     "無制限のAI日報生成",
-    "90日間のデータ保持",
-    "週報・月報の自動生成",
+    `${PLANS.starter.limits.retentionDays}日間のデータ保持`,
+    "週報の自動生成",
     "Slack連携",
     "テンプレートカスタマイズ",
-    "CSV/PDFエクスポート",
   ],
   team: [
-    "最大30名まで利用可能",
+    `最大${PLANS.team.limits.maxMembers}名まで利用可能`,
     "無制限のAI日報生成",
     "無制限のデータ保持",
     "管理者ダッシュボード",
-    "API連携",
     "優先サポート",
-    "SSO / SAML対応",
   ],
 };
 
@@ -147,13 +217,11 @@ const FAQ_ITEMS: FaqItem[] = [
   },
   {
     question: "無料プランに制限はありますか？",
-    answer:
-      "無料プランでは月30回までの日報生成、最大3名のメンバー、7日間のデータ保持となります。生成された日報にはウォーターマークが付きます。",
+    answer: `無料プランでは月${PLANS.free.limits.maxReportsPerMonth}回までのAI日報生成、最大${PLANS.free.limits.maxMembers}名のメンバー、${PLANS.free.limits.retentionDays}日間のデータ保持となります。生成された日報にはウォーターマークが付きます。`,
   },
   {
     question: "メンバー数の上限を超えたい場合は？",
-    answer:
-      "Teamプラン（30名まで）を超える場合は、カスタムプランをご用意できます。お問い合わせフォームよりご連絡ください。",
+    answer: `Teamプラン（${PLANS.team.limits.maxMembers}名まで）を超える場合は、カスタムプランをご用意できます。お問い合わせフォームよりご連絡ください。`,
   },
 ];
 
@@ -598,7 +666,15 @@ export function BillingSettings({
                     }
                   >
                     <td className="py-3 pr-4 text-[var(--text-primary)] font-medium">
-                      {feature.label}
+                      <span className="flex items-center gap-1.5">
+                        {feature.label}
+                        {feature.status === "coming_soon" && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-500">
+                            <Clock className="h-2.5 w-2.5" />
+                            近日公開
+                          </span>
+                        )}
+                      </span>
                     </td>
                     {(["free", "starter", "team"] as const).map((plan) => {
                       const val = feature[plan];
@@ -681,10 +757,10 @@ export function BillingSettings({
                 まだFreeプランをお使いですか？
               </h3>
               <p className="mt-1 text-sm text-blue-100">
-                Standardプランなら無制限の日報生成、週報対応、Slack連携が月額¥550で使えます。
+                Starterプランなら無制限の日報生成、週報対応、Slack連携が月額¥{PLANS.starter.price}で使えます。
                 {billingInterval === "annual" && (
                   <span className="font-medium text-white">
-                    {" "}年額なら月¥440 -- 20%もお得です。
+                    {" "}年額なら月¥{PLAN_PRICES_ANNUAL.starter} — 20%もお得です。
                   </span>
                 )}
               </p>
@@ -696,7 +772,7 @@ export function BillingSettings({
               disabled={checkoutLoadingPlan !== null}
               onClick={() => handleUpgrade("starter")}
             >
-              {checkoutLoadingPlan === "starter" ? "処理中..." : "Standardにアップグレード"}
+              {checkoutLoadingPlan === "starter" ? "処理中..." : "Starterにアップグレード"}
             </Button>
           </div>
         </div>

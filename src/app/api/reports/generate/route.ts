@@ -8,11 +8,13 @@ import { preprocessMessages } from "@/lib/slack/preprocessing";
 import { generateDailyReport } from "@/lib/ai/generate-report";
 import { DEFAULT_TEMPLATE } from "@/lib/report-template";
 import { rateLimit } from "@/lib/rate-limit";
+import { checkReportQuota } from "@/lib/plan-gate";
 import type {
   Workspace,
   SlackIntegration,
   DailyReportInsert,
   ReportStatus,
+  Plan,
 } from "@/lib/supabase/types";
 
 export const maxDuration = 300; // 5 minutes for Vercel
@@ -143,6 +145,24 @@ export async function POST(request: Request) {
     }
 
     const workspace = rawWorkspace as unknown as Workspace;
+
+    // Plan gate: check monthly report quota
+    const quota = await checkReportQuota(
+      admin,
+      workspaceId,
+      workspace.plan as Plan,
+    );
+    if (!quota.allowed) {
+      return NextResponse.json(
+        {
+          error: `今月のAI日報生成回数（${quota.limit}回）に達しました。プランをアップグレードして無制限に生成できます。`,
+          code: "QUOTA_EXCEEDED",
+          used: quota.used,
+          limit: quota.limit,
+        },
+        { status: 403 },
+      );
+    }
 
     // Get Slack integration
     const { data: rawIntegration } = await admin

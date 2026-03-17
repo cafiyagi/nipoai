@@ -92,12 +92,13 @@ export default async function ReportDetailPage({
   // ---------- Fetch workspace template ----------
   const { data: rawWorkspace } = await supabase
     .from("workspaces")
-    .select("report_template")
+    .select("report_template, plan")
     .eq("id", report.workspace_id)
     .single();
 
-  const workspace = rawWorkspace as Pick<Workspace, "report_template"> | null;
+  const workspace = rawWorkspace as Pick<Workspace, "report_template" | "plan"> | null;
   const template = workspace?.report_template ?? DEFAULT_TEMPLATE;
+  const plan = workspace?.plan ?? "free";
 
   // ---------- Format for client ----------
   // Initialize empty arrays for any template sections missing from content
@@ -122,7 +123,7 @@ export default async function ReportDetailPage({
   return (
     <div>
       <Header title="日報詳細" />
-      <ReportEditor initialReport={reportData} />
+      <ReportEditor initialReport={reportData} plan={plan} />
     </div>
   );
 }

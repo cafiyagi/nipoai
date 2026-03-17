@@ -166,6 +166,11 @@ export function TodayReportCard({
           {errorMessage && (
             <div className="flex flex-col items-start gap-1">
               <p className="text-xs text-[var(--danger)]">{errorMessage}</p>
+              {errorCode === "QUOTA_EXCEEDED" && (
+                <Link href="/dashboard/settings/billing" className="text-xs text-[var(--accent)] hover:underline">
+                  プランをアップグレード →
+                </Link>
+              )}
               {(errorCode === "NO_SLACK" || errorCode === "NO_CHANNELS" || errorCode === "FETCH_FAILED" || errorCode === "AUTH_INVALID" || errorCode === "NOT_IN_CHANNEL" || errorCode === "CHANNEL_NOT_FOUND") && (
                 <Link href="/dashboard/settings" className="text-xs text-[var(--accent)] hover:underline">
                   設定画面を開く →
