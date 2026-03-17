@@ -39,7 +39,7 @@ export function UsageBar({ used, limit, remaining }: UsageBarProps) {
         </div>
         {(isWarning || isDanger) && (
           <Link
-            href="/dashboard/settings/billing"
+            href="/dashboard/settings?tab=billing"
             className="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
           >
             アップグレード →

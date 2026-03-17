@@ -84,7 +84,7 @@ export default async function WeeklyReportsPage() {
               週報生成はStarterプラン以上でご利用いただけます。
             </p>
             <Link
-              href="/dashboard/settings/billing"
+              href="/dashboard/settings?tab=billing"
               className="mt-1 inline-block text-sm text-amber-600 hover:underline dark:text-amber-300"
             >
               プランをアップグレード →

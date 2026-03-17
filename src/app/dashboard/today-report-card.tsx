@@ -167,7 +167,7 @@ export function TodayReportCard({
             <div className="flex flex-col items-start gap-1">
               <p className="text-xs text-[var(--danger)]">{errorMessage}</p>
               {errorCode === "QUOTA_EXCEEDED" && (
-                <Link href="/dashboard/settings/billing" className="text-xs text-[var(--accent)] hover:underline">
+                <Link href="/dashboard/settings?tab=billing" className="text-xs text-[var(--accent)] hover:underline">
                   プランをアップグレード →
                 </Link>
               )}

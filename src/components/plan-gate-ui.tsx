@@ -31,7 +31,7 @@ export function PlanGateUI({
           {planName}プラン以上でご利用いただけます
         </p>
         <Link
-          href="/dashboard/settings/billing"
+          href="/dashboard/settings?tab=billing"
           className="mt-3 inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700"
         >
           アップグレード

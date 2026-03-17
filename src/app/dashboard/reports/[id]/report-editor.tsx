@@ -325,7 +325,7 @@ export function ReportEditor({ initialReport, plan }: ReportEditorProps) {
           </p>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
             <a
-              href="/dashboard/settings/billing"
+              href="/dashboard/settings?tab=billing"
               className="text-[var(--accent)] hover:underline"
             >
               アップグレード

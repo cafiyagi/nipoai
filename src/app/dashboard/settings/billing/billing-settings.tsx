@@ -269,10 +269,10 @@ export function BillingSettings({
     const checkoutStatus = searchParams.get("checkout");
     if (checkoutStatus === "success") {
       toast("プランのアップグレードが完了しました", "success");
-      router.replace("/dashboard/settings/billing", { scroll: false });
+      router.replace("/dashboard/settings?tab=billing", { scroll: false });
     } else if (checkoutStatus === "canceled") {
       toast("チェックアウトがキャンセルされました", "info");
-      router.replace("/dashboard/settings/billing", { scroll: false });
+      router.replace("/dashboard/settings?tab=billing", { scroll: false });
     }
   }, [searchParams, toast, router]);
 

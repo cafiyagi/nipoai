@@ -66,7 +66,7 @@ export default async function AnalyticsPage() {
                   Teamプランで日報提出率・メンバー別分析が利用可能になります。
                 </p>
                 <Link
-                  href="/dashboard/settings/billing"
+                  href="/dashboard/settings?tab=billing"
                   className="mt-4 inline-flex items-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
                 >
                   Teamにアップグレード

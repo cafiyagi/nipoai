@@ -32,7 +32,7 @@ export function UpgradeBanner({
             {description}
           </p>
           <Link
-            href="/dashboard/settings/billing"
+            href="/dashboard/settings?tab=billing"
             className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
           >
             {planName}にアップグレード
