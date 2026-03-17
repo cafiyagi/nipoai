@@ -10,6 +10,7 @@ import type {
   DailyReport,
   UserWorkspaceMembership,
   Workspace,
+  Profile,
 } from "@/lib/supabase/types";
 import { DEFAULT_TEMPLATE, type ReportTemplate } from "@/lib/report-template";
 
@@ -28,6 +29,7 @@ export interface ReportData {
   workspaceId: string;
   workspaceName: string;
   plan: string;
+  userName: string; // display_name from profiles
 }
 
 // ---------------------------------------------------------------------------
@@ -102,6 +104,16 @@ export default async function ReportDetailPage({
   const template = workspace?.report_template ?? DEFAULT_TEMPLATE;
   const plan = workspace?.plan ?? "free";
 
+  // ---------- Fetch profile for reporter name ----------
+  const { data: rawProfile } = await supabase
+    .from("profiles")
+    .select("display_name, email")
+    .eq("id", user.id)
+    .single();
+
+  const profile = rawProfile as Pick<Profile, "display_name" | "email"> | null;
+  const userName = profile?.display_name ?? profile?.email ?? "";
+
   // ---------- Format for client ----------
   // Initialize empty arrays for any template sections missing from content
   const content: ReportContent = {};
@@ -122,6 +134,7 @@ export default async function ReportDetailPage({
     workspaceId: report.workspace_id,
     workspaceName: workspace?.name ?? "",
     plan,
+    userName,
   };
 
   return (

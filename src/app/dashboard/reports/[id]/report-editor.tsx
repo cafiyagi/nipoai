@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Send, Save, Loader2, Hash, Lock, Download, Mail } from "lucide-react";
+import { ArrowLeft, Send, Save, Loader2, Hash, Lock, Download, Mail, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -65,9 +65,31 @@ export function ReportEditor({ initialReport, plan }: ReportEditorProps) {
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [emailInput, setEmailInput] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [reporterName, setReporterName] = useState(initialReport.userName);
+  const [reporterNameSaved, setReporterNameSaved] = useState(initialReport.userName);
 
   const isSubmitted = status === "submitted" || status === "delivered";
   const isEditable = status === "draft";
+
+  // ---------- Save reporter name on blur ----------
+  const handleReporterNameBlur = useCallback(async () => {
+    const trimmed = reporterName.trim();
+    if (trimmed === reporterNameSaved) return;
+
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ display_name: trimmed }),
+      });
+
+      if (res.ok) {
+        setReporterNameSaved(trimmed);
+      }
+    } catch {
+      // silent — non-critical update
+    }
+  }, [reporterName, reporterNameSaved]);
 
   // ---------- Build content from current text ----------
   const buildContent = useCallback((): ReportContent => {
@@ -276,9 +298,23 @@ export function ReportEditor({ initialReport, plan }: ReportEditorProps) {
               <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                 {initialReport.reportDate}
               </h2>
-              <Badge variant={statusVariant} className="mt-1">
-                {statusLabel}
-              </Badge>
+              <div className="mt-1 flex items-center gap-2">
+                <Badge variant={statusVariant}>
+                  {statusLabel}
+                </Badge>
+                <span className="text-[var(--text-muted)]">|</span>
+                <div className="flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5 text-[var(--text-muted)]" />
+                  <input
+                    type="text"
+                    value={reporterName}
+                    onChange={(e) => setReporterName(e.target.value)}
+                    onBlur={handleReporterNameBlur}
+                    placeholder="報告者名を入力"
+                    className="w-32 border-b border-transparent bg-transparent text-sm text-[var(--text-secondary)] placeholder:text-[var(--text-muted)] transition-colors focus:border-[var(--accent)] focus:outline-none hover:border-[var(--border-primary)]"
+                  />
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
