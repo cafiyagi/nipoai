@@ -8,6 +8,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Header } from "@/components/layout/header";
+import { AdminUserDeleteButton } from "./admin-user-delete-button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format, startOfDay, subDays } from "date-fns";
@@ -495,7 +496,8 @@ export default async function AdminPage() {
                     <th className="pb-3 pr-4 font-medium">メール</th>
                     <th className="pb-3 pr-4 font-medium">ワークスペース</th>
                     <th className="pb-3 pr-4 font-medium">Slack</th>
-                    <th className="pb-3 font-medium">登録日</th>
+                    <th className="pb-3 pr-4 font-medium">登録日</th>
+                    <th className="pb-3 font-medium">操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -556,8 +558,16 @@ export default async function AdminPage() {
                             <Badge variant="secondary">未連携</Badge>
                           )}
                         </td>
-                        <td className="py-3 text-[var(--text-secondary)]">
+                        <td className="py-3 pr-4 text-[var(--text-secondary)]">
                           {formatFullDate(profile.created_at)}
+                        </td>
+                        <td className="py-3">
+                          {!SUPER_ADMIN_EMAILS.includes(profile.email) && (
+                            <AdminUserDeleteButton
+                              userId={profile.id}
+                              displayName={profile.display_name || profile.email}
+                            />
+                          )}
                         </td>
                       </tr>
                     );
