@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Send, Save, Loader2, Hash, Lock } from "lucide-react";
+import { ArrowLeft, Send, Save, Loader2, Hash, Lock, Download, Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
 import type { ReportContent, ReportStatus, Plan } from "@/lib/supabase/types";
+import { PLANS } from "@/lib/constants";
 
 import type { ReportData } from "./page";
 
@@ -61,6 +62,9 @@ export function ReportEditor({ initialReport, plan }: ReportEditorProps) {
   const [channels, setChannels] = useState<{id: string; name: string; is_private: boolean}[]>([]);
   const [isLoadingChannels, setIsLoadingChannels] = useState(false);
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailInput, setEmailInput] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const isSubmitted = status === "submitted" || status === "delivered";
   const isEditable = status === "draft";
@@ -187,6 +191,50 @@ export function ReportEditor({ initialReport, plan }: ReportEditorProps) {
     }
   }, [buildContent, initialReport.id, toast, router]);
 
+  // ---------- PDF download ----------
+  const handlePdfDownload = useCallback(() => {
+    window.open(`/api/reports/${initialReport.id}/pdf`, "_blank");
+  }, [initialReport.id]);
+
+  // ---------- Email send ----------
+  const emailDeliveryEnabled = PLANS[plan]?.limits.emailDelivery ?? false;
+
+  const handleSendEmail = useCallback(async () => {
+    const emails = emailInput
+      .split(",")
+      .map((e) => e.trim())
+      .filter((e) => e.length > 0);
+
+    if (emails.length === 0) {
+      toast("メールアドレスを入力してください", "error");
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      const res = await fetch(`/api/reports/${initialReport.id}/email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emails }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "メール送信に失敗しました");
+      }
+
+      toast("メールを送信しました", "success");
+      setEmailDialogOpen(false);
+      setEmailInput("");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "メール送信に失敗しました";
+      toast(message, "error");
+    } finally {
+      setSendingEmail(false);
+    }
+  }, [emailInput, initialReport.id, toast]);
+
   // ---------- Status badge ----------
   const statusLabel = (() => {
     switch (status) {
@@ -234,6 +282,37 @@ export function ReportEditor({ initialReport, plan }: ReportEditorProps) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePdfDownload}
+            >
+              <Download className="mr-1 h-4 w-4" />
+              PDF
+            </Button>
+            {emailDeliveryEnabled ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEmailDialogOpen(true)}
+              >
+                <Mail className="mr-1 h-4 w-4" />
+                メール送信
+              </Button>
+            ) : (
+              plan === "free" && (
+                <a
+                  href="/dashboard/settings?tab=billing"
+                  className="inline-flex items-center gap-1 rounded-md border border-[var(--border-primary)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+                >
+                  <Mail className="h-4 w-4" />
+                  メール送信
+                  <span className="ml-1 rounded bg-[var(--accent)]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[var(--accent)]">
+                    PRO
+                  </span>
+                </a>
+              )
+            )}
             {isEditable && (
               <>
                 <Button
@@ -417,6 +496,44 @@ export function ReportEditor({ initialReport, plan }: ReportEditorProps) {
               </div>
             </>
           )}
+        </div>
+      </Dialog>
+
+      {/* Email send dialog */}
+      <Dialog
+        open={emailDialogOpen}
+        onClose={() => setEmailDialogOpen(false)}
+        title="メールで送信"
+        description="送信先のメールアドレスを入力してください。複数の場合はカンマ区切りで入力できます。"
+        className="max-w-lg"
+      >
+        <div className="flex flex-col gap-4">
+          <input
+            type="text"
+            value={emailInput}
+            onChange={(e) => setEmailInput(e.target.value)}
+            placeholder="email@example.com"
+            className="w-full rounded-lg border border-[var(--border-primary)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-colors focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20"
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setEmailDialogOpen(false)}
+            >
+              キャンセル
+            </Button>
+            <Button
+              onClick={handleSendEmail}
+              disabled={sendingEmail || !emailInput.trim()}
+            >
+              {sendingEmail ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Mail className="mr-2 h-4 w-4" />
+              )}
+              {sendingEmail ? "送信中..." : "送信"}
+            </Button>
+          </div>
         </div>
       </Dialog>
     </div>

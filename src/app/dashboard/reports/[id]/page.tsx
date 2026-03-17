@@ -26,6 +26,8 @@ export interface ReportData {
   content: ReportContent;
   template: ReportTemplate;
   workspaceId: string;
+  workspaceName: string;
+  plan: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -92,11 +94,11 @@ export default async function ReportDetailPage({
   // ---------- Fetch workspace template ----------
   const { data: rawWorkspace } = await supabase
     .from("workspaces")
-    .select("report_template, plan")
+    .select("name, report_template, plan")
     .eq("id", report.workspace_id)
     .single();
 
-  const workspace = rawWorkspace as Pick<Workspace, "report_template" | "plan"> | null;
+  const workspace = rawWorkspace as Pick<Workspace, "name" | "report_template" | "plan"> | null;
   const template = workspace?.report_template ?? DEFAULT_TEMPLATE;
   const plan = workspace?.plan ?? "free";
 
@@ -118,6 +120,8 @@ export default async function ReportDetailPage({
     content,
     template,
     workspaceId: report.workspace_id,
+    workspaceName: workspace?.name ?? "",
+    plan,
   };
 
   return (
