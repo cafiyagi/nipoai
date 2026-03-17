@@ -4,6 +4,10 @@ import {
   MousePointerClick,
   LogOut as LogOutIcon,
   Globe,
+  Cpu,
+  DollarSign,
+  TrendingUp,
+  Zap,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -66,6 +70,13 @@ interface ReportRow {
 interface PageViewRow {
   session_id: string;
   path: string;
+  created_at: string;
+}
+
+interface AiUsageRow {
+  workspace_id: string;
+  token_usage: number | null;
+  ai_model: string | null;
   created_at: string;
 }
 
@@ -179,6 +190,94 @@ function computeAnalytics(views: PageViewRow[]) {
 }
 
 // ---------------------------------------------------------------------------
+// AI cost helpers
+// ---------------------------------------------------------------------------
+
+// GPT-4o-mini pricing (USD per 1M tokens, blended input/output estimate)
+const GPT4O_MINI_COST_PER_TOKEN = 0.3 / 1_000_000; // ~$0.30/1M blended
+const USD_JPY_RATE = 150; // approximate
+
+function computeAiUsage(
+  dailyUsage: AiUsageRow[],
+  weeklyUsage: AiUsageRow[],
+  workspaceMap: Map<string, WorkspaceRow>,
+) {
+  const allUsage = [...dailyUsage, ...weeklyUsage];
+
+  const now = new Date();
+  const monthStart = format(now, "yyyy-MM-01");
+
+  let totalTokens = 0;
+  let monthTokens = 0;
+  let totalDailyCount = dailyUsage.length;
+  let totalWeeklyCount = weeklyUsage.length;
+
+  // Per-workspace aggregation
+  const workspaceTokens = new Map<string, { tokens: number; count: number }>();
+
+  // Daily aggregation (last 30 days)
+  const dailyTokenMap = new Map<string, number>();
+
+  for (const row of allUsage) {
+    const tokens = row.token_usage ?? 0;
+    totalTokens += tokens;
+
+    if (row.created_at >= monthStart) {
+      monthTokens += tokens;
+    }
+
+    // Per-workspace
+    const ws = workspaceTokens.get(row.workspace_id) ?? { tokens: 0, count: 0 };
+    ws.tokens += tokens;
+    ws.count += 1;
+    workspaceTokens.set(row.workspace_id, ws);
+
+    // Daily chart
+    const dayKey = row.created_at.slice(0, 10);
+    dailyTokenMap.set(dayKey, (dailyTokenMap.get(dayKey) ?? 0) + tokens);
+  }
+
+  // Build daily chart data (last 30 days)
+  const dailyChart: { date: string; tokens: number; cost: number }[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const day = subDays(now, i);
+    const dayStr = format(day, "yyyy-MM-dd");
+    const dayLabel = format(day, "M/d", { locale: ja });
+    const tokens = dailyTokenMap.get(dayStr) ?? 0;
+    dailyChart.push({
+      date: dayLabel,
+      tokens,
+      cost: tokens * GPT4O_MINI_COST_PER_TOKEN,
+    });
+  }
+
+  // Per-workspace sorted by usage
+  const workspaceBreakdown = [...workspaceTokens.entries()]
+    .map(([wsId, data]) => ({
+      workspace: workspaceMap.get(wsId),
+      ...data,
+      cost: data.tokens * GPT4O_MINI_COST_PER_TOKEN,
+    }))
+    .sort((a, b) => b.tokens - a.tokens);
+
+  const totalCostUsd = totalTokens * GPT4O_MINI_COST_PER_TOKEN;
+  const monthCostUsd = monthTokens * GPT4O_MINI_COST_PER_TOKEN;
+
+  return {
+    totalTokens,
+    monthTokens,
+    totalCostUsd,
+    monthCostUsd,
+    totalCostJpy: totalCostUsd * USD_JPY_RATE,
+    monthCostJpy: monthCostUsd * USD_JPY_RATE,
+    totalDailyCount,
+    totalWeeklyCount,
+    dailyChart,
+    workspaceBreakdown,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -201,6 +300,8 @@ export default async function AdminPage() {
     membershipsResult,
     reportsResult,
     pageViewsResult,
+    aiDailyUsageResult,
+    aiWeeklyUsageResult,
   ] = await Promise.all([
     admin
       .from("profiles")
@@ -231,6 +332,16 @@ export default async function AdminPage() {
       .gte("created_at", subDays(new Date(), 30).toISOString())
       .order("created_at", { ascending: false })
       .limit(10000),
+    admin
+      .from("daily_reports")
+      .select("workspace_id, token_usage, ai_model, created_at")
+      .not("token_usage", "is", null)
+      .order("created_at", { ascending: false }),
+    admin
+      .from("weekly_reports")
+      .select("workspace_id, token_usage, ai_model, created_at")
+      .not("token_usage", "is", null)
+      .order("created_at", { ascending: false }),
   ]);
 
   const profiles = (profilesResult.data ?? []) as ProfileRow[];
@@ -239,6 +350,8 @@ export default async function AdminPage() {
   const memberships = (membershipsResult.data ?? []) as MembershipRow[];
   const recentReports = (reportsResult.data ?? []) as ReportRow[];
   const pageViews = (pageViewsResult.data ?? []) as PageViewRow[];
+  const aiDailyUsage = (aiDailyUsageResult.data ?? []) as AiUsageRow[];
+  const aiWeeklyUsage = (aiWeeklyUsageResult.data ?? []) as AiUsageRow[];
 
   // Build lookup maps
   const workspaceMap = new Map(workspaces.map((w) => [w.id, w]));
@@ -267,6 +380,9 @@ export default async function AdminPage() {
 
   // Analytics
   const analytics = computeAnalytics(pageViews);
+
+  // AI usage
+  const aiUsage = computeAiUsage(aiDailyUsage, aiWeeklyUsage, workspaceMap);
 
   function formatDate(dateStr: string) {
     try {
@@ -478,6 +594,147 @@ export default async function AdminPage() {
                   );
                 })}
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* ================================================================= */}
+        {/* AI Usage Section                                                */}
+        {/* ================================================================= */}
+
+        <h2 className="text-lg font-semibold text-[var(--text-primary)] pt-2">
+          AI利用状況
+        </h2>
+
+        {/* AI summary cards */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <AnalyticsCard
+            icon={<Cpu className="h-4 w-4" />}
+            label="今月のトークン数"
+            value={aiUsage.monthTokens.toLocaleString()}
+            sub={`${aiUsage.totalDailyCount + aiUsage.totalWeeklyCount} 件のレポート（全期間）`}
+          />
+          <AnalyticsCard
+            icon={<DollarSign className="h-4 w-4" />}
+            label="今月の推定コスト"
+            value={`¥${Math.round(aiUsage.monthCostJpy).toLocaleString()}`}
+            sub={`$${aiUsage.monthCostUsd.toFixed(4)} USD`}
+          />
+          <AnalyticsCard
+            icon={<TrendingUp className="h-4 w-4" />}
+            label="全期間トークン数"
+            value={aiUsage.totalTokens.toLocaleString()}
+            sub={`日報 ${aiUsage.totalDailyCount}件 / 週報 ${aiUsage.totalWeeklyCount}件`}
+          />
+          <AnalyticsCard
+            icon={<Zap className="h-4 w-4" />}
+            label="全期間コスト"
+            value={`¥${Math.round(aiUsage.totalCostJpy).toLocaleString()}`}
+            sub={`$${aiUsage.totalCostUsd.toFixed(4)} USD（GPT-4o-mini）`}
+          />
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          {/* Daily token usage chart (30 days) */}
+          <Card>
+            <CardHeader>
+              <CardTitle>日別トークン使用量（30日間）</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {aiUsage.dailyChart.every((d) => d.tokens === 0) ? (
+                <p className="text-sm text-[var(--text-muted)]">
+                  まだデータがありません
+                </p>
+              ) : (
+                <div className="space-y-1">
+                  {aiUsage.dailyChart
+                    .filter((_, i) => i % 3 === 0 || i >= 27)
+                    .map((day) => {
+                      const max = Math.max(
+                        ...aiUsage.dailyChart.map((d) => d.tokens),
+                        1,
+                      );
+                      const pct = Math.round((day.tokens / max) * 100);
+                      return (
+                        <div key={day.date} className="flex items-center gap-3">
+                          <span className="w-12 shrink-0 text-xs text-[var(--text-muted)]">
+                            {day.date}
+                          </span>
+                          <div className="flex-1">
+                            <div
+                              className="h-4 rounded bg-[var(--accent)] transition-all"
+                              style={{ width: `${Math.max(pct, 1)}%` }}
+                            />
+                          </div>
+                          <span className="w-20 shrink-0 text-right text-xs font-medium text-[var(--text-primary)]">
+                            {day.tokens > 0
+                              ? day.tokens.toLocaleString()
+                              : "-"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+              <p className="mt-3 text-xs text-[var(--text-muted)]">
+                ※ コスト推定: GPT-4o-mini $0.30/1M tokens（input/output平均）、1USD = ¥{USD_JPY_RATE}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Per-workspace breakdown */}
+          <Card>
+            <CardHeader>
+              <CardTitle>ワークスペース別 AI利用量</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {aiUsage.workspaceBreakdown.length === 0 ? (
+                <p className="text-sm text-[var(--text-muted)]">
+                  まだデータがありません
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-[var(--text-secondary)]">
+                        <th className="pb-3 pr-4 font-medium">ワークスペース</th>
+                        <th className="pb-3 pr-4 font-medium text-right">レポート数</th>
+                        <th className="pb-3 pr-4 font-medium text-right">トークン</th>
+                        <th className="pb-3 font-medium text-right">推定コスト</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {aiUsage.workspaceBreakdown.map((row) => (
+                        <tr
+                          key={row.workspace?.id ?? "unknown"}
+                          className="border-b last:border-0"
+                        >
+                          <td className="py-3 pr-4 font-medium text-[var(--text-primary)]">
+                            {row.workspace?.name ?? "不明"}
+                            {row.workspace && (
+                              <Badge
+                                variant={planVariant(row.workspace.plan)}
+                                className="ml-2 text-[10px]"
+                              >
+                                {row.workspace.plan}
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="py-3 pr-4 text-right text-[var(--text-secondary)]">
+                            {row.count}
+                          </td>
+                          <td className="py-3 pr-4 text-right text-[var(--text-primary)]">
+                            {row.tokens.toLocaleString()}
+                          </td>
+                          <td className="py-3 text-right text-[var(--text-secondary)]">
+                            ¥{Math.round(row.cost * USD_JPY_RATE).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
