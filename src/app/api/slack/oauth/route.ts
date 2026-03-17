@@ -4,7 +4,8 @@ import { randomBytes } from "crypto";
 
 const SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID!;
 const SLACK_SCOPES =
-  "channels:history,channels:read,groups:history,groups:read,chat:write,im:write,users:read";
+  "channels:history,channels:read,channels:join,groups:history,groups:read,chat:write,im:write,users:read";
+const SLACK_USER_SCOPES = "channels:write,groups:write";
 
 export async function GET(request: Request) {
   try {
@@ -46,6 +47,7 @@ export async function GET(request: Request) {
     slackAuthUrl.searchParams.set("scope", SLACK_SCOPES);
     slackAuthUrl.searchParams.set("redirect_uri", redirectUri);
     slackAuthUrl.searchParams.set("state", state);
+    slackAuthUrl.searchParams.set("user_scope", SLACK_USER_SCOPES);
 
     return NextResponse.redirect(slackAuthUrl.toString());
   } catch (error) {

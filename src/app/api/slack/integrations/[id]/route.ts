@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { WebClient } from "@slack/web-api";
 import { createSlackClient } from "@/lib/slack/client";
+import { decrypt } from "@/lib/slack/encryption";
 import type { UserWorkspaceMembership, SlackIntegration } from "@/lib/supabase/types";
 
 interface RouteContext {
@@ -71,7 +73,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     // Fetch the bot token so we can join channels
     const { data: rawFullIntegration } = await admin
       .from("slack_integrations")
-      .select("encrypted_bot_token")
+      .select("encrypted_bot_token, encrypted_user_token, bot_user_id")
       .eq("id", integrationId)
       .single();
 
@@ -90,16 +92,39 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     // Auto-join bot to selected channels
     if (rawFullIntegration) {
-      const fullIntegration = rawFullIntegration as { encrypted_bot_token: string };
+      const fullIntegration = rawFullIntegration as {
+        encrypted_bot_token: string;
+        encrypted_user_token: string | null;
+        bot_user_id: string | null;
+      };
       const slackClient = createSlackClient(fullIntegration.encrypted_bot_token);
+      const userToken = fullIntegration.encrypted_user_token
+        ? decrypt(fullIntegration.encrypted_user_token)
+        : null;
+      const botUserId = fullIntegration.bot_user_id;
       const joinErrors: string[] = [];
 
       for (const channelId of selected_channel_ids) {
         try {
           await slackClient.conversations.join({ channel: channelId });
         } catch {
-          // Private channels can't be joined via API — bot must already be invited
-          joinErrors.push(channelId);
+          // Private channels can't be joined via API — try inviting via user token
+          if (userToken && botUserId) {
+            try {
+              const userClient = new WebClient(userToken);
+              await userClient.conversations.invite({
+                channel: channelId,
+                users: botUserId,
+              });
+            } catch (inviteErr) {
+              const err = inviteErr as { data?: { error?: string } };
+              if (err.data?.error !== "already_in_channel") {
+                joinErrors.push(channelId);
+              }
+            }
+          } else {
+            joinErrors.push(channelId);
+          }
         }
       }
 

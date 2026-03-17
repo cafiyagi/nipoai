@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createSlackClient } from "@/lib/slack/client";
-import { fetchChannelMessages } from "@/lib/slack/messages";
+import { decrypt } from "@/lib/slack/encryption";
+import { fetchChannelMessages, SlackFetchError } from "@/lib/slack/messages";
 import { preprocessMessages } from "@/lib/slack/preprocessing";
 import { generateDailyReport } from "@/lib/ai/generate-report";
 import { DEFAULT_TEMPLATE } from "@/lib/report-template";
@@ -146,7 +147,7 @@ export async function POST(request: Request) {
     // Get Slack integration
     const { data: rawIntegration } = await admin
       .from("slack_integrations")
-      .select("id, encrypted_bot_token, selected_channel_ids")
+      .select("id, encrypted_bot_token, encrypted_user_token, bot_user_id, selected_channel_ids")
       .eq("workspace_id", workspaceId)
       .limit(1)
       .maybeSingle();
@@ -161,7 +162,7 @@ export async function POST(request: Request) {
     const integration = rawIntegration as unknown as Pick<
       SlackIntegration,
       "id" | "encrypted_bot_token" | "selected_channel_ids"
-    >;
+    > & { encrypted_user_token: string | null; bot_user_id: string | null };
 
     const channelIds = integration.selected_channel_ids ?? [];
     if (channelIds.length === 0) {
@@ -218,6 +219,9 @@ export async function POST(request: Request) {
     // --- Generate the report (same pipeline as cron) ---
 
     const slackClient = createSlackClient(integration.encrypted_bot_token);
+    const userToken = integration.encrypted_user_token
+      ? decrypt(integration.encrypted_user_token)
+      : null;
     const { oldest, latest } = getStartAndEndOfDayUnix(
       reportDate,
       workspace.timezone,
@@ -245,6 +249,7 @@ export async function POST(request: Request) {
     // Collect messages from all selected channels
     const allMessages = [];
     const failedChannels: string[] = [];
+    let lastErrorCode: string | null = null;
     for (const channelId of channelIds) {
       try {
         const messages = await fetchChannelMessages(
@@ -252,6 +257,7 @@ export async function POST(request: Request) {
           channelId,
           oldest,
           latest,
+          { userToken, botUserId: integration.bot_user_id },
         );
         allMessages.push(...messages);
       } catch (channelError) {
@@ -260,17 +266,37 @@ export async function POST(request: Request) {
           channelError,
         );
         failedChannels.push(channelId);
+        if (channelError instanceof SlackFetchError) {
+          lastErrorCode = channelError.code;
+        }
       }
     }
 
-    // If ALL channels failed, surface a meaningful error
+    // If ALL channels failed, surface a meaningful error based on the cause
     if (failedChannels.length === channelIds.length) {
+      let errorMessage: string;
+      let code: string;
+
+      if (lastErrorCode === "invalid_auth" || lastErrorCode === "token_revoked") {
+        errorMessage =
+          "Slackの認証が無効になっています。設定画面からSlackを再連携してください。";
+        code = "AUTH_INVALID";
+      } else if (lastErrorCode === "not_in_channel") {
+        errorMessage =
+          "ボットがチャンネルに参加していません。Slackで対象チャンネルにて /invite @NipoAI を実行してください。";
+        code = "NOT_IN_CHANNEL";
+      } else if (lastErrorCode === "channel_not_found") {
+        errorMessage =
+          "選択されたチャンネルが見つかりません。チャンネルが削除されていないか確認し、設定画面でチャンネルを再選択してください。";
+        code = "CHANNEL_NOT_FOUND";
+      } else {
+        errorMessage =
+          "Slackチャンネルからメッセージを取得できませんでした。設定画面からSlackを再連携するか、チャンネルにてボットを招待（/invite @NipoAI）してください。";
+        code = "FETCH_FAILED";
+      }
+
       return NextResponse.json(
-        {
-          error:
-            "Slackチャンネルからメッセージを取得できませんでした。ボットがチャンネルに招待されているか確認してください。プライベートチャンネルの場合は、Slackを再連携する必要があります。",
-          code: "FETCH_FAILED",
-        },
+        { error: errorMessage, code },
         { status: 400 },
       );
     }

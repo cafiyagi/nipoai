@@ -94,6 +94,8 @@ export async function GET(request: Request) {
     const botToken = oauthResult.access_token;
     const teamId = oauthResult.team?.id;
     const teamName = oauthResult.team?.name;
+    const userToken = oauthResult.authed_user?.access_token ?? undefined;
+    const botUserId = oauthResult.bot_user_id ?? undefined;
 
     if (!teamId) {
       throw new Error("No team ID returned from Slack OAuth");
@@ -101,6 +103,7 @@ export async function GET(request: Request) {
 
     // Encrypt the bot token before storage
     const encryptedToken = encrypt(botToken);
+    const encryptedUserToken = userToken ? encrypt(userToken) : null;
 
     // Upsert into slack_integrations using admin client (bypasses RLS)
     const admin = createAdminClient();
@@ -109,6 +112,8 @@ export async function GET(request: Request) {
       slack_team_id: teamId,
       slack_team_name: teamName ?? null,
       encrypted_bot_token: encryptedToken,
+      encrypted_user_token: encryptedUserToken,
+      bot_user_id: botUserId ?? null,
       installed_by: user.id,
     };
 
@@ -141,7 +146,21 @@ export async function GET(request: Request) {
           try {
             await authedClient.conversations.join({ channel: channelId });
           } catch {
-            // Private channels can't be auto-joined — user will need /invite
+            // Join failed (e.g. private channel) — try invite via user token
+            if (userToken && botUserId) {
+              try {
+                const userClient = new WebClient(userToken);
+                await userClient.conversations.invite({
+                  channel: channelId,
+                  users: botUserId,
+                });
+              } catch (inviteErr) {
+                const err = inviteErr as { data?: { error?: string } };
+                if (err.data?.error !== "already_in_channel") {
+                  console.warn(`conversations.invite failed for ${channelId}:`, err.data?.error);
+                }
+              }
+            }
           }
         }
       }

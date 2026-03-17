@@ -136,6 +136,8 @@ export interface Database {
           slack_team_id: string;
           slack_team_name: string | null;
           encrypted_bot_token: string;
+          encrypted_user_token: string | null;
+          bot_user_id: string | null;
           selected_channel_ids: string[];
           installed_by: string | null;
           created_at: string;
@@ -146,6 +148,8 @@ export interface Database {
           slack_team_id: string;
           slack_team_name?: string | null;
           encrypted_bot_token: string;
+          encrypted_user_token?: string | null;
+          bot_user_id?: string | null;
           selected_channel_ids?: string[];
           installed_by?: string | null;
           created_at?: string;
@@ -156,6 +160,8 @@ export interface Database {
           slack_team_id?: string;
           slack_team_name?: string | null;
           encrypted_bot_token?: string;
+          encrypted_user_token?: string | null;
+          bot_user_id?: string | null;
           selected_channel_ids?: string[];
           installed_by?: string | null;
           created_at?: string;
