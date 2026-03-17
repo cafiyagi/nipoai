@@ -16,6 +16,8 @@ import { RecentReportsList } from "./recent-reports-list";
 import { UsageBar } from "./usage-bar";
 import { getReportUsage } from "@/lib/plan-gate";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { DEFAULT_TEMPLATE } from "@/lib/report-template";
+import { TemplateEditor } from "./settings/template/template-editor";
 import type {
   ReportStatus,
   ReportContent,
@@ -53,7 +55,7 @@ function getGreeting(): string {
 // ---------------------------------------------------------------------------
 
 export default async function DashboardPage() {
-  const { user, supabase, workspace, workspaceId } =
+  const { user, supabase, workspace, workspaceId, isAdmin } =
     await getWorkspaceContext();
 
   const today = new Date();
@@ -159,6 +161,9 @@ export default async function DashboardPage() {
     workspace.plan as Plan,
   );
 
+  // Template for admin editor
+  const template = workspace.report_template ?? DEFAULT_TEMPLATE;
+
   return (
     <div>
       <Header title="ダッシュボード" />
@@ -263,6 +268,16 @@ export default async function DashboardPage() {
             <RecentReportsList reports={recentReports} />
           </CardContent>
         </Card>
+
+        {/* Template editor (admin only) */}
+        {isAdmin && (
+          <div className="mt-6">
+            <TemplateEditor
+              workspaceId={workspaceId}
+              initialTemplate={template}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
