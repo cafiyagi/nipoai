@@ -461,7 +461,7 @@ export default async function AdminPage() {
         {/* Analytics Section                                                 */}
         {/* ================================================================= */}
 
-        {/* Analytics summary cards */}
+        {/* Analytics + AI usage summary cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <AnalyticsCard
             icon={<Eye className="h-4 w-4" />}
@@ -489,7 +489,35 @@ export default async function AdminPage() {
           />
         </div>
 
-        {/* Funnel + Top Pages + Daily Visitors */}
+        {/* AI usage summary cards */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <AnalyticsCard
+            icon={<Cpu className="h-4 w-4" />}
+            label="今月のトークン数"
+            value={aiUsage.monthTokens.toLocaleString()}
+            sub={`${aiUsage.totalDailyCount + aiUsage.totalWeeklyCount} 件のレポート（全期間）`}
+          />
+          <AnalyticsCard
+            icon={<DollarSign className="h-4 w-4" />}
+            label="今月の推定コスト"
+            value={`¥${Math.round(aiUsage.monthCostJpy).toLocaleString()}`}
+            sub={`$${aiUsage.monthCostUsd.toFixed(4)} USD`}
+          />
+          <AnalyticsCard
+            icon={<TrendingUp className="h-4 w-4" />}
+            label="全期間トークン数"
+            value={aiUsage.totalTokens.toLocaleString()}
+            sub={`日報 ${aiUsage.totalDailyCount}件 / 週報 ${aiUsage.totalWeeklyCount}件`}
+          />
+          <AnalyticsCard
+            icon={<Zap className="h-4 w-4" />}
+            label="全期間コスト"
+            value={`¥${Math.round(aiUsage.totalCostJpy).toLocaleString()}`}
+            sub={`$${aiUsage.totalCostUsd.toFixed(4)} USD（GPT-4o-mini）`}
+          />
+        </div>
+
+        {/* Funnel + Top Pages + Daily Visitors + AI Usage */}
         <div className="grid gap-4 lg:grid-cols-3">
           {/* Funnel */}
           <Card>
@@ -598,42 +626,7 @@ export default async function AdminPage() {
           </Card>
         </div>
 
-        {/* ================================================================= */}
-        {/* AI Usage Section                                                */}
-        {/* ================================================================= */}
-
-        <h2 className="text-lg font-semibold text-[var(--text-primary)] pt-2">
-          AI利用状況
-        </h2>
-
-        {/* AI summary cards */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <AnalyticsCard
-            icon={<Cpu className="h-4 w-4" />}
-            label="今月のトークン数"
-            value={aiUsage.monthTokens.toLocaleString()}
-            sub={`${aiUsage.totalDailyCount + aiUsage.totalWeeklyCount} 件のレポート（全期間）`}
-          />
-          <AnalyticsCard
-            icon={<DollarSign className="h-4 w-4" />}
-            label="今月の推定コスト"
-            value={`¥${Math.round(aiUsage.monthCostJpy).toLocaleString()}`}
-            sub={`$${aiUsage.monthCostUsd.toFixed(4)} USD`}
-          />
-          <AnalyticsCard
-            icon={<TrendingUp className="h-4 w-4" />}
-            label="全期間トークン数"
-            value={aiUsage.totalTokens.toLocaleString()}
-            sub={`日報 ${aiUsage.totalDailyCount}件 / 週報 ${aiUsage.totalWeeklyCount}件`}
-          />
-          <AnalyticsCard
-            icon={<Zap className="h-4 w-4" />}
-            label="全期間コスト"
-            value={`¥${Math.round(aiUsage.totalCostJpy).toLocaleString()}`}
-            sub={`$${aiUsage.totalCostUsd.toFixed(4)} USD（GPT-4o-mini）`}
-          />
-        </div>
-
+        {/* AI Usage detail cards */}
         <div className="grid gap-4 lg:grid-cols-2">
           {/* Daily token usage chart (30 days) */}
           <Card>
