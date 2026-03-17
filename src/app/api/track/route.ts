@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+import { isSuperAdmin } from "@/lib/auth/admin";
 
 export const runtime = "nodejs";
 
@@ -10,6 +12,17 @@ export async function POST(req: NextRequest) {
 
     if (!sessionId || !path) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    }
+
+    // Skip tracking for super admins
+    try {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && isSuperAdmin(user.email)) {
+        return NextResponse.json({ ok: true });
+      }
+    } catch {
+      // Auth check failed — continue tracking (visitor is likely unauthenticated)
     }
 
     const ua = req.headers.get("user-agent") ?? null;
