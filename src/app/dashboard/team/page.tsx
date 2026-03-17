@@ -6,11 +6,14 @@ import { Avatar } from "@/components/ui/avatar";
 import { getWorkspaceContext } from "@/lib/dashboard/get-workspace-context";
 import { TeamActions } from "./team-actions";
 import { MemberRoleSelect } from "./member-role-select";
+import { OneOnOneButton } from "./one-on-one-button";
+import { checkPlanFeature } from "@/lib/plan-gate";
 
 import type {
   UserWorkspaceMembership,
   Profile,
   DailyReport,
+  Plan,
 } from "@/lib/supabase/types";
 
 type MemberWithProfile = Pick<UserWorkspaceMembership, "id" | "role" | "user_id" | "created_at"> & {
@@ -45,6 +48,15 @@ export default async function TeamPage() {
       .eq("workspace_id", workspaceId)
       .order("report_date", { ascending: false }),
   ]);
+
+  // Fetch workspace plan
+  const { data: rawWorkspace } = await supabase
+    .from("workspaces")
+    .select("plan")
+    .eq("id", workspaceId)
+    .single();
+  const workspacePlan = ((rawWorkspace as unknown as { plan: Plan } | null)?.plan ?? "free") as Plan;
+  const oneOnOneAllowed = checkPlanFeature(workspacePlan, "oneOnOneAgenda");
 
   const membersRaw = (membersResult.data ?? []) as unknown as MemberWithProfile[];
 
@@ -119,6 +131,11 @@ export default async function TeamPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
                           最終日報日
                         </th>
+                        {isAdmin && (
+                          <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
+                            1on1
+                          </th>
+                        )}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--border-primary)]">
@@ -150,6 +167,16 @@ export default async function TeamPage() {
                           <td className="px-6 py-4 text-sm text-[var(--text-secondary)]">
                             {member.lastReport ?? "未提出"}
                           </td>
+                          {isAdmin && (
+                            <td className="px-6 py-4">
+                              <OneOnOneButton
+                                targetUserId={member.userId}
+                                memberName={member.name}
+                                isAdmin={isAdmin}
+                                planAllowed={oneOnOneAllowed}
+                              />
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
@@ -181,6 +208,14 @@ export default async function TeamPage() {
                         <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
                           最終日報: {member.lastReport ?? "未提出"}
                         </p>
+                        <div className="mt-2">
+                          <OneOnOneButton
+                            targetUserId={member.userId}
+                            memberName={member.name}
+                            isAdmin={isAdmin}
+                            planAllowed={oneOnOneAllowed}
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}

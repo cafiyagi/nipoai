@@ -11,7 +11,7 @@ interface SettingsPageProps {
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   const params = await searchParams;
-  const validTabs = ["general", "billing", "slack", "template", "account"] as const;
+  const validTabs = ["general", "billing", "slack", "template", "reminder", "account"] as const;
   const initialTab = validTabs.includes(params.tab as typeof validTabs[number])
     ? (params.tab as typeof validTabs[number])
     : undefined;

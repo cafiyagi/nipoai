@@ -27,6 +27,12 @@ export interface PlanLimits {
   watermark: boolean;
   /** Whether the admin analytics dashboard is available. */
   adminDashboard: boolean;
+  /** Whether AI team summary (weekly) is available. */
+  teamSummary: boolean;
+  /** Whether 1-on-1 agenda auto-generation is available. */
+  oneOnOneAgenda: boolean;
+  /** Whether automatic reminder for unsubmitted reports is available. */
+  autoReminder: boolean;
 }
 
 export interface PlanDefinition {
@@ -65,6 +71,9 @@ export const PLANS: Record<Plan, PlanDefinition> = {
       csvExport: false,
       watermark: true,
       adminDashboard: false,
+      teamSummary: false,
+      oneOnOneAgenda: false,
+      autoReminder: false,
     },
   },
   starter: {
@@ -76,6 +85,8 @@ export const PLANS: Record<Plan, PlanDefinition> = {
       "無制限のAI日報生成",
       "直近90日分のレポート保存",
       "週報の自動生成",
+      "AIチームサマリー（週次）",
+      "未提出自動リマインド",
       "Slack連携（1チャンネル）",
       "メール配信",
       "CSVエクスポート",
@@ -92,6 +103,9 @@ export const PLANS: Record<Plan, PlanDefinition> = {
       csvExport: true,
       watermark: false,
       adminDashboard: false,
+      teamSummary: true,
+      oneOnOneAgenda: false,
+      autoReminder: true,
     },
   },
   team: {
@@ -103,6 +117,9 @@ export const PLANS: Record<Plan, PlanDefinition> = {
       "無制限のAI日報生成",
       "無制限のレポート保存",
       "週報の自動生成",
+      "AIチームサマリー（週次）",
+      "1on1アジェンダ自動生成",
+      "未提出自動リマインド",
       "Slack連携（無制限チャンネル）",
       "メール配信",
       "CSVエクスポート",
@@ -121,6 +138,9 @@ export const PLANS: Record<Plan, PlanDefinition> = {
       csvExport: true,
       watermark: false,
       adminDashboard: true,
+      teamSummary: true,
+      oneOnOneAgenda: true,
+      autoReminder: true,
     },
   },
 } as const;

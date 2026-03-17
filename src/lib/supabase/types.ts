@@ -48,6 +48,7 @@ export interface Database {
           email: string;
           display_name: string | null;
           avatar_url: string | null;
+          slack_user_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -55,6 +56,7 @@ export interface Database {
           email: string;
           display_name?: string | null;
           avatar_url?: string | null;
+          slack_user_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -62,6 +64,7 @@ export interface Database {
           email?: string;
           display_name?: string | null;
           avatar_url?: string | null;
+          slack_user_id?: string | null;
           created_at?: string;
         };
       };
@@ -77,6 +80,8 @@ export interface Database {
           report_generation_time: string;
           timezone: string;
           report_template: ReportTemplate;
+          reminder_enabled: boolean;
+          reminder_time: string;
           created_at: string;
         };
         Insert: {
@@ -89,6 +94,8 @@ export interface Database {
           report_generation_time?: string;
           timezone?: string;
           report_template?: ReportTemplate;
+          reminder_enabled?: boolean;
+          reminder_time?: string;
           created_at?: string;
         };
         Update: {
@@ -101,6 +108,8 @@ export interface Database {
           report_generation_time?: string;
           timezone?: string;
           report_template?: ReportTemplate;
+          reminder_enabled?: boolean;
+          reminder_time?: string;
           created_at?: string;
         };
       };
@@ -282,6 +291,81 @@ export interface Database {
         };
       };
 
+      team_summaries: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          week_start: string;
+          week_end: string;
+          content: Record<string, string[]>;
+          source_report_count: number;
+          ai_model: string | null;
+          token_usage: number | null;
+          generated_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          week_start: string;
+          week_end: string;
+          content: Record<string, string[]>;
+          source_report_count?: number;
+          ai_model?: string | null;
+          token_usage?: number | null;
+          generated_by: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          week_start?: string;
+          week_end?: string;
+          content?: Record<string, string[]>;
+          source_report_count?: number;
+          ai_model?: string | null;
+          token_usage?: number | null;
+          generated_by?: string;
+          created_at?: string;
+        };
+      };
+
+      one_on_one_agendas: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          target_user_id: string;
+          generated_by: string;
+          content: Record<string, string[]>;
+          source_report_ids: string[];
+          ai_model: string | null;
+          token_usage: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          target_user_id: string;
+          generated_by: string;
+          content: Record<string, string[]>;
+          source_report_ids?: string[];
+          ai_model?: string | null;
+          token_usage?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          workspace_id?: string;
+          target_user_id?: string;
+          generated_by?: string;
+          content?: Record<string, string[]>;
+          source_report_ids?: string[];
+          ai_model?: string | null;
+          token_usage?: number | null;
+          created_at?: string;
+        };
+      };
+
       subscriptions: {
         Row: {
           id: string;
@@ -368,6 +452,14 @@ export type ReportDeliveryUpdate = Tables["report_deliveries"]["Update"];
 export type WeeklyReport = Tables["weekly_reports"]["Row"];
 export type WeeklyReportInsert = Tables["weekly_reports"]["Insert"];
 export type WeeklyReportUpdate = Tables["weekly_reports"]["Update"];
+
+export type TeamSummary = Tables["team_summaries"]["Row"];
+export type TeamSummaryInsert = Tables["team_summaries"]["Insert"];
+export type TeamSummaryUpdate = Tables["team_summaries"]["Update"];
+
+export type OneOnOneAgenda = Tables["one_on_one_agendas"]["Row"];
+export type OneOnOneAgendaInsert = Tables["one_on_one_agendas"]["Insert"];
+export type OneOnOneAgendaUpdate = Tables["one_on_one_agendas"]["Update"];
 
 export type Subscription = Tables["subscriptions"]["Row"];
 export type SubscriptionInsert = Tables["subscriptions"]["Insert"];

@@ -6,6 +6,7 @@ import {
   CreditCard,
   MessageSquare,
   FileText,
+  Bell,
   ShieldAlert,
   ArrowLeft,
 } from "lucide-react";
@@ -17,13 +18,14 @@ import { GeneralSettings } from "./general/general-settings";
 import { BillingSettings } from "./billing/billing-settings";
 import { SlackSettings } from "./slack/slack-settings";
 import { TemplateEditor } from "./template/template-editor";
+import { ReminderSettings } from "./reminder/reminder-settings";
 import { AccountSettings } from "./account/account-settings";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-type TabId = "hub" | "general" | "billing" | "slack" | "template" | "account";
+type TabId = "hub" | "general" | "billing" | "slack" | "template" | "reminder" | "account";
 
 interface SettingsTabsProps {
   workspace: Workspace;
@@ -101,6 +103,15 @@ const categories: CategoryItem[] = [
     adminOnly: true,
   },
   {
+    id: "reminder",
+    label: "未提出リマインド",
+    description: "未提出メンバーへの自動リマインド設定",
+    icon: Bell,
+    iconBg: "bg-[var(--icon-bg-gray)] text-[var(--icon-text-gray)]",
+    iconHoverBg: "group-hover:bg-[var(--accent-bg)] group-hover:text-[var(--accent)]",
+    adminOnly: true,
+  },
+  {
     id: "account",
     label: "アカウント",
     description: "アカウント削除などの操作",
@@ -143,6 +154,10 @@ export function SettingsTabs({
           : <Badge variant="secondary">未連携</Badge>;
       case "template":
         return <span className="shrink-0 text-xs text-[var(--text-muted)]">{template.length}セクション</span>;
+      case "reminder":
+        return workspace.reminder_enabled
+          ? <Badge variant="success">ON</Badge>
+          : <Badge variant="secondary">OFF</Badge>;
       default:
         return null;
     }
@@ -223,6 +238,14 @@ export function SettingsTabs({
         <TemplateEditor
           workspaceId={workspace.id}
           initialTemplate={template}
+        />
+      )}
+
+      {activeTab === "reminder" && isAdmin && (
+        <ReminderSettings
+          workspace={workspace}
+          isAdmin={isAdmin}
+          plan={currentPlan}
         />
       )}
 
