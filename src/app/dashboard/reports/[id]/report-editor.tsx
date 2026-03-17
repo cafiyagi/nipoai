@@ -295,25 +295,25 @@ export function ReportEditor({ initialReport, plan }: ReportEditorProps) {
               戻る
             </Button>
             <div>
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-                {initialReport.reportDate}
-              </h2>
-              <div className="mt-1 flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+                  {initialReport.reportDate}
+                </h2>
                 <Badge variant={statusVariant}>
                   {statusLabel}
                 </Badge>
-                <span className="text-[var(--text-muted)]">|</span>
-                <div className="flex items-center gap-1.5">
-                  <User className="h-3.5 w-3.5 text-[var(--text-muted)]" />
-                  <input
-                    type="text"
-                    value={reporterName}
-                    onChange={(e) => setReporterName(e.target.value)}
-                    onBlur={handleReporterNameBlur}
-                    placeholder="報告者名を入力"
-                    className="w-32 border-b border-transparent bg-transparent text-sm text-[var(--text-secondary)] placeholder:text-[var(--text-muted)] transition-colors focus:border-[var(--accent)] focus:outline-none hover:border-[var(--border-primary)]"
-                  />
-                </div>
+              </div>
+              <div className="mt-2 flex items-center gap-2 rounded-md border border-[var(--border-primary)] bg-[var(--bg-primary)] px-3 py-1.5 transition-colors focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent)]/20">
+                <User className="h-4 w-4 flex-shrink-0 text-[var(--accent)]" />
+                <span className="text-sm font-bold text-[var(--text-primary)]">報告者:</span>
+                <input
+                  type="text"
+                  value={reporterName}
+                  onChange={(e) => setReporterName(e.target.value)}
+                  onBlur={handleReporterNameBlur}
+                  placeholder="名前を入力してください"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none"
+                />
               </div>
             </div>
           </div>
