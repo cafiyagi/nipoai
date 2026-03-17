@@ -78,7 +78,7 @@ async function deliverToSlack(reportId: string, workspaceId: string, channelId?:
 
     const { data: rawReport } = await admin
       .from("daily_reports")
-      .select("id, content, report_date, user_id, profiles(display_name, email)")
+      .select("id, content, report_date, user_id")
       .eq("id", reportId)
       .single();
 
@@ -87,14 +87,21 @@ async function deliverToSlack(reportId: string, workspaceId: string, channelId?:
     const report = rawReport as unknown as Pick<
       DailyReport,
       "id" | "content" | "report_date" | "user_id"
-    > & {
-      profiles: Pick<Profile, "display_name" | "email">;
-    };
+    >;
+
+    // Fetch profile separately (no FK from daily_reports to profiles)
+    const { data: rawProfile } = await admin
+      .from("profiles")
+      .select("display_name, email")
+      .eq("id", report.user_id)
+      .single();
+
+    const profile = rawProfile as Pick<Profile, "display_name" | "email"> | null;
 
     const integration = workspace.slack_integrations[0];
     const slackClient = createSlackClient(integration.encrypted_bot_token);
     const userName =
-      report.profiles?.display_name ?? report.profiles?.email ?? "メンバー";
+      profile?.display_name ?? profile?.email ?? "メンバー";
     const template = workspace.report_template ?? DEFAULT_TEMPLATE;
 
     const formattedMessage = formatReportForSlack(
@@ -132,7 +139,7 @@ async function deliverToSlack(reportId: string, workspaceId: string, channelId?:
       let slackUserId: string | undefined;
       try {
         const lookupResult = await slackClient.users.lookupByEmail({
-          email: report.profiles?.email ?? "",
+          email: profile?.email ?? "",
         });
         slackUserId = lookupResult.user?.id;
       } catch {
