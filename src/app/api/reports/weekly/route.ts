@@ -155,6 +155,7 @@ export async function POST(request: Request) {
       userName,
       week_start,
       week_end,
+      workspace.plan as string,
     );
 
     // Save to DB

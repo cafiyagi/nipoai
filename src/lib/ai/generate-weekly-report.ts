@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import type { ReportContent } from "@/lib/supabase/types";
+import { getModelForPlan } from "@/lib/ai/model-config";
 
-const MODEL = "gpt-4o-mini";
 const MAX_RETRIES = 2;
 
 export interface WeeklyReportContent {
@@ -103,19 +103,21 @@ export async function generateWeeklyReport(
   userName: string,
   weekStart: string,
   weekEnd: string,
+  plan?: string,
 ): Promise<GenerateWeeklyReportResult> {
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
 
+  const { model, maxTokens } = getModelForPlan(plan);
   const prompt = buildPrompt(dailyReports, userName, weekStart, weekEnd);
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
       const response = await openai.chat.completions.create({
-        model: MODEL,
-        max_tokens: 1024,
+        model,
+        max_tokens: maxTokens,
         messages: [{ role: "user", content: prompt }],
       });
 

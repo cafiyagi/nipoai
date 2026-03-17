@@ -351,6 +351,7 @@ export async function POST(request: Request) {
       userName,
       reportDate,
       workspace.report_template ?? DEFAULT_TEMPLATE,
+      workspace.plan as string,
     );
 
     const row: DailyReportInsert = {

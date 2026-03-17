@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import type { ReportContent } from "@/lib/supabase/types";
+import { getModelForPlan } from "@/lib/ai/model-config";
 
-const MODEL = "gpt-4o-mini";
 const MAX_RETRIES = 2;
 
 export interface OneOnOneAgendaContent {
@@ -101,19 +101,21 @@ export async function generateOneOnOneAgenda(
   dailyReports: DailyReportInput[],
   memberName: string,
   managerName: string,
+  plan?: string,
 ): Promise<GenerateOneOnOneAgendaResult> {
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
 
+  const { model, maxTokens } = getModelForPlan(plan);
   const prompt = buildPrompt(dailyReports, memberName, managerName);
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
       const response = await openai.chat.completions.create({
-        model: MODEL,
-        max_tokens: 1024,
+        model,
+        max_tokens: maxTokens,
         messages: [{ role: "user", content: prompt }],
       });
 

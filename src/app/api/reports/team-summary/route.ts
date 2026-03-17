@@ -173,7 +173,7 @@ export async function POST(request: Request) {
     }));
 
     // Generate team summary
-    const result = await generateTeamSummary(memberReports, week_start, week_end);
+    const result = await generateTeamSummary(memberReports, week_start, week_end, workspace.plan as string);
 
     // Save to DB
     const { data: inserted, error: insertError } = await admin

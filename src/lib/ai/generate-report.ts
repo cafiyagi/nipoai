@@ -2,8 +2,8 @@ import OpenAI from "openai";
 import type { ReportContent } from "@/lib/supabase/types";
 import type { PreprocessedMessage } from "@/lib/slack/preprocessing";
 import { DEFAULT_TEMPLATE, type ReportTemplate } from "@/lib/report-template";
+import { getModelForPlan } from "@/lib/ai/model-config";
 
-const MODEL = "gpt-4o-mini";
 const MAX_RETRIES = 2;
 
 interface GenerateReportResult {
@@ -114,11 +114,13 @@ export async function generateDailyReport(
   userName: string,
   date: string,
   template?: ReportTemplate,
+  plan?: string,
 ): Promise<GenerateReportResult> {
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
 
+  const { model, maxTokens } = getModelForPlan(plan);
   const effectiveTemplate = template ?? DEFAULT_TEMPLATE;
   const prompt = buildPrompt(messages, userName, date, effectiveTemplate);
   let lastError: Error | null = null;
@@ -126,8 +128,8 @@ export async function generateDailyReport(
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
       const response = await openai.chat.completions.create({
-        model: MODEL,
-        max_tokens: 1024,
+        model,
+        max_tokens: maxTokens,
         messages: [
           {
             role: "user",

@@ -174,6 +174,7 @@ export async function POST(request: Request) {
       })),
       memberName,
       managerName,
+      workspace.plan as string,
     );
 
     // Save to DB
