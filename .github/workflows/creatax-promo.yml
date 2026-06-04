@@ -1,0 +1,34 @@
+name: Creatax promo
+
+# Build-in-public promo for Creatax (creator revenue dashboard), 1x/day.
+# Calls the self-contained nipoai endpoint (OpenAI generates + posts).
+# Only EMPATHY_POST_TOKEN is needed here; all other keys live on Vercel.
+
+on:
+  schedule:
+    # 10:00 UTC = 19:00 JST (prime time)
+    - cron: "0 10 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: creatax-promo
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate and post Creatax promo tweet
+        run: |
+          RESP=$(curl -sS -X POST "https://nipoai.app/api/x/post-creatax" \
+            -H "Authorization: Bearer ${{ secrets.EMPATHY_POST_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -w $'\n%{http_code}')
+          CODE=$(printf '%s' "$RESP" | tail -n1)
+          BODY=$(printf '%s' "$RESP" | sed '$d')
+          echo "HTTP $CODE"
+          echo "$BODY"
+          if [ "$CODE" != "200" ]; then
+            echo "::error::creatax promo failed (HTTP $CODE)"
+            exit 1
+          fi
