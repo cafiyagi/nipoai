@@ -1,0 +1,46 @@
+name: X empathy bot
+
+# AI x indie-dev empathy posts, 2-3x/day. Calls the self-contained
+# nipoai endpoint which generates (Claude) and posts the tweet.
+# All API keys live on Vercel; only EMPATHY_POST_TOKEN is needed here.
+
+on:
+  schedule:
+    # UTC. 23:00 -> 08:00 JST, 04:00 -> 13:00 JST (optional ~50%), 12:00 -> 21:00 JST
+    - cron: "0 23,4,12 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: x-empathy-bot
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether to post (midday slot is ~50%)
+        id: gate
+        run: |
+          HOUR=$(date -u +%H)
+          POST=1
+          if [ "$HOUR" = "04" ] && [ "${{ github.event_name }}" = "schedule" ]; then
+            if [ $((RANDOM % 2)) -eq 0 ]; then POST=0; fi
+          fi
+          echo "post=$POST" >> "$GITHUB_OUTPUT"
+          echo "UTC hour=$HOUR event=${{ github.event_name }} -> post=$POST"
+
+      - name: Generate and post tweet
+        if: steps.gate.outputs.post == '1'
+        run: |
+          RESP=$(curl -sS -X POST "https://nipoai.app/api/x/post-empathy" \
+            -H "Authorization: Bearer ${{ secrets.EMPATHY_POST_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -w $'\n%{http_code}')
+          CODE=$(printf '%s' "$RESP" | tail -n1)
+          BODY=$(printf '%s' "$RESP" | sed '$d')
+          echo "HTTP $CODE"
+          echo "$BODY"
+          if [ "$CODE" != "200" ]; then
+            echo "::error::empathy post failed (HTTP $CODE)"
+            exit 1
+          fi
