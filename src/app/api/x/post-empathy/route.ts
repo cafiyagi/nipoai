@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
 import { getXClient } from "@/lib/x/client";
 
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const MAX_LEN = 280;
-const MODEL = "claude-sonnet-4-6";
+const MODEL = "gpt-4o-mini";
 
 // Sub-themes rotated at random so each post takes a fresh angle.
 const THEMES = [
@@ -57,23 +57,22 @@ function clean(s: string): string {
     .trim();
 }
 
-async function generateTweet(client: Anthropic): Promise<string> {
+async function generateTweet(openai: OpenAI): Promise<string> {
   const theme = THEMES[Math.floor(Math.random() * THEMES.length)];
   for (let attempt = 0; attempt < 3; attempt++) {
-    const msg = await client.messages.create({
+    const res = await openai.chat.completions.create({
       model: MODEL,
+      temperature: 1.0,
       max_tokens: 400,
-      temperature: 1,
-      system: SYSTEM_PROMPT,
       messages: [
+        { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
           content: `今日のサブテーマ:「${theme}」。これをベースに、毎回違う切り口で、共感系ツイートを1本だけ書いて。`,
         },
       ],
     });
-    const block = msg.content.find((b) => b.type === "text");
-    const text = block && block.type === "text" ? clean(block.text) : "";
+    const text = clean(res.choices[0]?.message?.content ?? "");
     if (text && text.length <= MAX_LEN && !/nipoai/i.test(text)) return text;
   }
   throw new Error("Failed to generate a valid tweet after retries");
@@ -82,7 +81,7 @@ async function generateTweet(client: Anthropic): Promise<string> {
 /**
  * POST /api/x/post-empathy
  *
- * Generates one empathy tweet (AI x indie dev) with Claude and posts it.
+ * Generates one empathy tweet (AI x indie dev) with OpenAI and posts it.
  * Self-contained: all API keys stay on Vercel. Triggered 2-3x/day by a
  * GitHub Actions cron. Never promotes the product.
  *
@@ -100,17 +99,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  if (!anthropicKey) {
+  if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json(
-      { error: "Server misconfigured: ANTHROPIC_API_KEY" },
+      { error: "Server misconfigured: OPENAI_API_KEY" },
       { status: 500 },
     );
   }
 
   let text: string;
   try {
-    text = await generateTweet(new Anthropic({ apiKey: anthropicKey }));
+    text = await generateTweet(new OpenAI());
   } catch (error) {
     const detail = error instanceof Error ? error.message : "Unknown error";
     console.error("[post-empathy] generation failed:", detail);
